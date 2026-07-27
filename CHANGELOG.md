@@ -3,6 +3,12 @@
 本项目的所有重要变更都会记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.1] - 2026-07-27
+
+### 修复
+
+- 协议块中的数据文件路径改用 `vault.configDir` 渲染，兼容自定义配置目录的 vault（不再硬编码 `.obsidian`）
+
 ## [1.1.0] - 2026-07-27
 
 ### 新增
