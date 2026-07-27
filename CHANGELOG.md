@@ -3,6 +3,19 @@
 本项目的所有重要变更都会记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.0] - 2026-07-27
+
+### 新增
+
+- 界面文案 i18n（跟随 Obsidian 语言，中/英）
+- 多实例待机保护（心跳写者锁）：后启动的实例进入待机，不写文件、不注册监听；写者锁 90 秒过期后待机实例自动接管
+- 云同步检测提示（Obsidian Sync / iCloud / Dropbox / OneDrive / Google Drive / Syncthing / git），只提示一次
+- 基线内容预算设置（默认 100MB）：超预算的文本文件只存哈希，增删行数退化为 null，变更检测不受影响
+
+### 修复
+
+- locale 探测增加 `navigator.language` 兜底（`moment.locale` 为非官方 API）
+
 ## [1.1.1] - 2026-07-27
 
 ### 修复
