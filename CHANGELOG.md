@@ -3,6 +3,12 @@
 本项目的所有重要变更都会记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1] - 2026-07-27
+
+### 修复
+
+- 社区目录自动审查反馈：`builtin-modules` 换为 Node 内置 `node:module`（减一个依赖）；`cursors.ts` JSON 解析类型收窄；`onunload` 返回值类型对齐 Plugin 接口；设置文案移除 `.obsidian` 字面量（逻辑本就用 `vault.configDir`）
+
 ## [1.0.0] - 2026-07-27
 
 首个公开发布版本。
