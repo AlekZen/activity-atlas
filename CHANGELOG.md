@@ -3,6 +3,16 @@
 本项目的所有重要变更都会记录在此文件中。
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.0] - 2026-07-27
+
+### 新增
+
+- 移动端支持：文件操作从 Node `fs` 迁移到 `vault.adapter`（官方 API），`isDesktopOnly` 移除
+
+### 修复
+
+- 消除社区目录「Direct Filesystem Access」警告：插件不再直接访问文件系统
+
 ## [1.0.1] - 2026-07-27
 
 ### 修复
