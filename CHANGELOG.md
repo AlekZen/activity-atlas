@@ -8,6 +8,7 @@
 ### 新增
 
 - 首跑自动安装 AI 协议块：首次启用插件即把协议块写入 AGENTS.md / CLAUDE.md，开箱即用（`autoInstallProtocol` 设置可关闭，关闭后退回 Notice 引导）
+- `extras/vault-feed-hook.mjs`：可选的 agent SessionStart hook 脚本，会话启动时自动注入未读变更并推进游标（Kimi Code / Claude Code，README 附配置示例）
 
 ## [0.2.0] - 2026-07-27
 
