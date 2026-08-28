@@ -7,35 +7,18 @@ function event(seq: number, ts: number, path: string): ChangeEvent {
 }
 
 describe('calendar activity model', () => {
-  it('aggregates events, unique files, and commit paths by local day', () => {
+  it('aggregates events and unique files by local day', () => {
     const morning = new Date(2026, 7, 28, 9).getTime();
     const afternoon = new Date(2026, 7, 28, 15).getTime();
     const summaries = summarizeActivityDays([
       event(1, morning, 'a.py'),
       event(2, afternoon, 'a.py'),
       event(3, afternoon, 'b.html'),
-      {
-        seq: 4,
-        ts: afternoon,
-        op: 'commit',
-        path: '',
-        stat: null,
-        source: 'git',
-        commit: {
-          oid: 'abcdef',
-          shortOid: 'abcdef',
-          subject: 'save',
-          author: 'Alek',
-          ts: afternoon,
-          paths: ['b.html', 'c.css'],
-        },
-      },
     ]);
 
     expect(summaries.get(localDayKey(morning))).toMatchObject({
-      eventCount: 4,
-      fileCount: 3,
-      commitCount: 1,
+      eventCount: 3,
+      fileCount: 2,
     });
   });
 

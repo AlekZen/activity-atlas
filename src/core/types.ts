@@ -1,19 +1,10 @@
-export type ChangeOp = 'create' | 'modify' | 'delete' | 'rename' | 'resync' | 'commit';
-export type EventSource = 'live' | 'reconcile' | 'system' | 'git';
+export type ChangeOp = 'create' | 'modify' | 'delete' | 'rename';
+export type EventSource = 'live';
 
 export interface LineStat {
   added: number;
   removed: number;
 }
-export interface GitCommitInfo {
-  oid: string;
-  shortOid: string;
-  subject: string;
-  author: string;
-  ts: number;
-  paths: string[];
-}
-
 
 export interface ChangeEvent {
   seq: number;
@@ -22,6 +13,5 @@ export interface ChangeEvent {
   path: string;
   oldPath?: string;
   stat: LineStat | null;
-  commit?: GitCommitInfo;
   source: EventSource;
 }

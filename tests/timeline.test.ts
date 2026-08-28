@@ -29,23 +29,6 @@ describe('buildTimeline', () => {
     expect(timeline.every(item => item.kind === 'burst')).toBe(true);
   });
 
-  it('uses commits as hard burst boundaries', () => {
-    const timeline = buildTimeline([
-      event(1, 1_000, 'modify', 'a.md'),
-      {
-        seq: 2,
-        ts: 2_000,
-        op: 'commit',
-        path: '',
-        stat: null,
-        source: 'git',
-        commit: { oid: 'abcdef', shortOid: 'abcdef', subject: 'save', author: 'Alek', ts: 2_000, paths: ['a.md'] },
-      },
-      event(3, 3_000, 'modify', 'a.md'),
-    ], 60_000);
-    expect(timeline.map(item => item.kind)).toEqual(['burst', 'commit', 'burst']);
-  });
-
   it('coalesces repeated modifications and sums line statistics', () => {
     const timeline = buildTimeline([
       event(1, 1_000, 'modify', 'a.md'),

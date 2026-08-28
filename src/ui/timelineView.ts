@@ -3,24 +3,21 @@ import { buildCalendarMonth, localDayKey, navigateCalendarDate, summarizeActivit
 import type { ActivityDaySummary } from '../core/calendar';
 import type { ChangeEvent, ChangeOp } from '../core/types';
 import { buildTimeline } from '../core/timeline';
-import type { ActivityBurst, CoalescedChange, TimelineItem } from '../core/timeline';
-import type { GitSnapshot } from '../git/types';
+import type { ActivityBurst, CoalescedChange } from '../core/timeline';
 
 export const VIEW_TYPE_ACTIVITY_ATLAS = 'activity-atlas-timeline';
 
 export interface TimelineDataSource {
   loadEvents(): Promise<ChangeEvent[]>;
   burstWindowMs(): number;
-  loadGitSnapshot?(): Promise<GitSnapshot | null>;
   subscribe?(callback: () => void): () => void;
 }
 
-const OP_LABEL: Record<Exclude<ChangeOp, 'commit'>, string> = {
+const OP_LABEL: Record<ChangeOp, string> = {
   create: 'Created',
   modify: 'Modified',
   delete: 'Deleted',
   rename: 'Renamed',
-  resync: 'Reconciled',
 };
 
 const FILE_ICON_BY_EXTENSION: Record<string, string> = {
@@ -89,7 +86,6 @@ function dayLabel(timestamp: number): string {
 
 export class ActivityAtlasTimelineView extends ItemView {
   private events: ChangeEvent[] = [];
-  private gitSnapshot: GitSnapshot | null = null;
   private activityDays = new Map<string, ActivityDaySummary>();
   private timelineEl!: HTMLElement;
   private statsEl!: HTMLElement;
@@ -98,7 +94,6 @@ export class ActivityAtlasTimelineView extends ItemView {
   private search = '';
   private operation = 'all';
   private extension = 'all';
-  private gitState = 'all';
   private day = 'all';
   private calendarMonth = new Date();
   private calendarFocusDay = localDayKey(Date.now());
@@ -193,7 +188,6 @@ export class ActivityAtlasTimelineView extends ItemView {
       ['modify', 'Modified'],
       ['rename', 'Renamed'],
       ['delete', 'Deleted'],
-      ['resync', 'Reconciled'],
     ], value => {
       this.operation = value;
       this.renderTimeline();
@@ -202,18 +196,6 @@ export class ActivityAtlasTimelineView extends ItemView {
       this.extension = value;
       this.renderTimeline();
     }, 'extension');
-    this.createSelect(controls, 'Git state', [
-      ['all', 'All Git states'],
-      ['modified', 'Uncommitted'],
-      ['staged', 'Staged'],
-      ['staged-modified', 'Staged + modified'],
-      ['untracked', 'Untracked'],
-      ['ignored', 'Ignored'],
-      ['clean', 'Committed / clean'],
-    ], value => {
-      this.gitState = value;
-      this.renderTimeline();
-    });
 
     const refreshButton = controls.createEl('button', {
       cls: 'clickable-icon activity-atlas__refresh',
@@ -269,13 +251,9 @@ export class ActivityAtlasTimelineView extends ItemView {
     const generation = ++this.refreshGeneration;
     this.timelineEl?.addClass('is-loading');
     try {
-      const [events, gitSnapshot] = await Promise.all([
-        this.source.loadEvents(),
-        this.source.loadGitSnapshot?.() ?? Promise.resolve(null),
-      ]);
+      const events = await this.source.loadEvents();
       if (generation !== this.refreshGeneration) return;
       this.events = events;
-      this.gitSnapshot = gitSnapshot;
       this.activityDays = summarizeActivityDays(events);
       this.updateExtensionOptions();
       this.updateDayOptions();
@@ -298,7 +276,7 @@ export class ActivityAtlasTimelineView extends ItemView {
     const current = select.value;
     const extensions = new Set<string>();
     for (const event of this.events) {
-      if (!event.path || event.op === 'commit') continue;
+      if (!event.path) continue;
       const name = event.path.split('/').pop() ?? '';
       const dot = name.lastIndexOf('.');
       extensions.add(dot >= 0 ? name.slice(dot + 1).toLowerCase() : '(none)');
@@ -488,7 +466,6 @@ export class ActivityAtlasTimelineView extends ItemView {
           'activity-atlas__calendar-day',
           cell.inCurrentMonth ? '' : 'is-outside',
           activity ? 'has-activity' : '',
-          activity?.commitCount ? 'has-commit' : '',
           cell.key === this.day ? 'is-selected' : '',
           cell.key === todayKey ? 'is-today' : '',
         ].filter(Boolean).join(' '),
@@ -539,14 +516,6 @@ export class ActivityAtlasTimelineView extends ItemView {
   private filteredEvents(): ChangeEvent[] {
     return this.events.filter(event => {
       if (this.day !== 'all' && localDayKey(event.ts) !== this.day) return false;
-      if (event.op === 'commit') {
-        const commitMatches = !this.search
-          || event.commit?.subject.toLowerCase().includes(this.search)
-          || event.commit?.author.toLowerCase().includes(this.search)
-          || event.commit?.oid.toLowerCase().includes(this.search)
-          || event.commit?.paths.some(path => path.toLowerCase().includes(this.search));
-        return this.operation === 'all' && this.extension === 'all' && this.gitState === 'all' && commitMatches;
-      }
       if (this.search && !event.path.toLowerCase().includes(this.search) && !(event.oldPath ?? '').toLowerCase().includes(this.search)) return false;
       if (this.operation !== 'all' && event.op !== this.operation) return false;
       if (this.extension !== 'all') {
@@ -555,19 +524,13 @@ export class ActivityAtlasTimelineView extends ItemView {
         const extension = dot >= 0 ? name.slice(dot + 1).toLowerCase() : '(none)';
         if (extension !== this.extension) return false;
       }
-      if (this.gitState !== 'all') {
-        const state = this.gitSnapshot?.files[event.path]?.state ?? 'clean';
-        if (state !== this.gitState) return false;
-      }
       return true;
     });
   }
 
   private setAllBursts(open: boolean): void {
     const items = buildTimeline(this.filteredEvents(), this.source.burstWindowMs());
-    for (const item of items) {
-      if (item.kind === 'burst') this.burstOpenState.set(item.id, open);
-    }
+    for (const item of items) this.burstOpenState.set(item.id, open);
     this.renderTimeline();
   }
 
@@ -578,11 +541,9 @@ export class ActivityAtlasTimelineView extends ItemView {
     const items = buildTimeline(filtered, this.source.burstWindowMs());
     const visible = items.slice(0, this.visibleItems);
     const paths = new Set(filtered.map(event => event.path).filter(Boolean));
-    const dirty = Object.keys(this.gitSnapshot?.files ?? {}).filter(path => this.gitSnapshot?.files[path].state !== 'ignored').length;
     this.statsEl.empty();
     this.statsEl.createSpan({ text: `${paths.size} files` });
-    this.statsEl.createSpan({ text: `${items.filter(item => item.kind === 'burst').length} bursts` });
-    if (this.gitSnapshot?.available) this.statsEl.createSpan({ text: `${dirty} uncommitted`, cls: dirty ? 'is-dirty' : 'is-clean' });
+    this.statsEl.createSpan({ text: `${items.length} bursts` });
 
     if (visible.length === 0) {
       const empty = this.timelineEl.createDiv({ cls: 'activity-atlas__empty' });
@@ -592,16 +553,14 @@ export class ActivityAtlasTimelineView extends ItemView {
     }
 
     let lastDay = '';
-    const defaultOpenBurstId = visible.find(item => item.kind === 'burst')?.id;
+    const defaultOpenBurstId = visible[0]?.id;
     for (const item of visible) {
-      const timestamp = item.kind === 'commit' ? item.ts : item.endTs;
-      const day = new Date(timestamp).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      const day = new Date(item.endTs).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
       if (day !== lastDay) {
         this.timelineEl.createDiv({ cls: 'activity-atlas__day', text: day });
         lastDay = day;
       }
-      if (item.kind === 'commit') this.renderCommit(item);
-      else this.renderBurst(item, this.burstOpenState.get(item.id) ?? item.id === defaultOpenBurstId);
+      this.renderBurst(item, this.burstOpenState.get(item.id) ?? item.id === defaultOpenBurstId);
     }
 
     if (items.length > visible.length) {
@@ -611,14 +570,6 @@ export class ActivityAtlasTimelineView extends ItemView {
         this.renderTimeline();
       });
     }
-  }
-
-  private renderCommit(item: Extract<TimelineItem, { kind: 'commit' }>): void {
-    const marker = this.timelineEl.createDiv({ cls: 'activity-atlas__commit' });
-    marker.createSpan({ cls: 'activity-atlas__rail-dot', attr: { 'aria-hidden': 'true' } });
-    const body = marker.createDiv();
-    body.createDiv({ cls: 'activity-atlas__commit-title', text: item.commit.subject || 'Commit' });
-    body.createDiv({ cls: 'activity-atlas__commit-meta', text: `${item.commit.shortOid} · ${item.commit.author} · ${item.commit.paths.length} files` });
   }
 
   private renderBurst(burst: ActivityBurst, open: boolean): void {
@@ -676,10 +627,5 @@ export class ActivityAtlasTimelineView extends ItemView {
     detail.createSpan({ text: operation });
     if (change.oldPath) detail.createSpan({ text: `from ${change.oldPath}` });
     if (change.stat) detail.createSpan({ text: `+${change.stat.added} −${change.stat.removed}`, cls: 'activity-atlas__diff' });
-    if (change.source === 'reconcile') detail.createSpan({ text: 'Recovered after restart', cls: 'activity-atlas__source' });
-
-    const gitStatus = this.gitSnapshot?.files[change.path];
-    const badge = row.createSpan({ cls: `activity-atlas__git is-${gitStatus?.state ?? 'clean'}` });
-    badge.setText(gitStatus ? gitStatus.state.replace('-', ' + ') : 'committed / clean');
   }
 }

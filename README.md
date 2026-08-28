@@ -5,9 +5,9 @@ Visualize activity across an Obsidian vault as a compact, burst-based timeline.
 [![GitHub release](https://img.shields.io/github/v/release/AlekZen/activity-atlas)](https://github.com/AlekZen/activity-atlas/releases)
 [![License: MIT](https://img.shields.io/github/license/AlekZen/activity-atlas)](LICENSE)
 
-Activity Atlas records file activity locally, reconciles changes made while Obsidian was closed, and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
+Activity Atlas records file activity locally and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
 
-> Activity Atlas 0.1.0 is desktop-only. Its optional Git overlay invokes the local Git executable through a Node.js API.
+> Activity Atlas works on desktop and mobile without executing external commands.
 
 ## Screenshots
 
@@ -21,21 +21,17 @@ Activity Atlas records file activity locally, reconciles changes made while Obsi
 
 ## Features
 
-- Tracks file creation, modification, rename, deletion, and startup reconciliation.
-- Covers every vault file; configured text formats additionally receive line-change statistics.
+- Tracks file creation, modification, rename, and deletion.
+- Receives Obsidian's live activity events for every file type; configured text formats additionally receive line-change statistics.
 - Groups nearby events into collapsible activity bursts.
-- Filters by path, day, operation, extension, and Git state.
+- Filters by path, day, operation, and extension.
 - Includes a six-week activity calendar with accessible keyboard navigation.
-- Restores changes made while Obsidian was closed from a bounded local baseline.
 - Coordinates multiple Obsidian instances with a writer lock so only one instance records.
-- Optionally displays read-only Git status and the latest commit without changing the repository.
 - Uses no network services, telemetry, accounts, or advertising.
 
 ## Requirements
 
-- Obsidian 1.13.0 or later.
-- Windows, macOS, or Linux desktop.
-- Git on `PATH` only if the Git overlay is enabled.
+- Obsidian 1.13.0 or later on desktop or mobile.
 
 ## Installation
 
@@ -58,7 +54,7 @@ After the initial Community directory review is approved:
 
 Open Activity Atlas from the ribbon activity icon or run **Activity Atlas: Open activity timeline** from the command palette.
 
-The timeline updates while Obsidian is open. At startup, Activity Atlas compares the current vault with its previous baseline and records changes made by sync tools, command-line programs, or other applications while Obsidian was closed.
+The timeline updates while Obsidian is open, recording each file event as it happens.
 
 ### Calendar keyboard controls
 
@@ -74,17 +70,6 @@ When the activity calendar is open:
 | `Enter` / `Space` | Select the focused day |
 | `Escape` | Close the calendar and return focus to its button |
 
-## Git overlay
-
-The Git overlay is enabled by default on desktop and is strictly read-only. Activity Atlas allows only these commands:
-
-- `git status`
-- `git rev-parse`
-- `git log`
-- `git diff-tree`
-
-It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages, commits, resets, checks out, or writes repository data. Disable the overlay in Activity Atlas settings if it is not needed.
-
 ## Settings
 
 | Setting | Default | Description |
@@ -92,23 +77,19 @@ It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages
 | Tracked text extensions | Common note, data, code, and web formats | Formats that receive line-change statistics |
 | Exclude globs | Empty | Additional paths to ignore; the vault configuration folder is always excluded |
 | Large file threshold | 512 KB | Larger text files are tracked without line statistics |
-| Baseline content budget | 20 MB | Maximum retained text used for reconciliation and diffs |
+| Live comparison budget | 20 MB | Maximum text kept in memory during the current session to compute line-change statistics; not persisted to disk |
 | Retention | 90 days / 50,000 events | Bounds the local activity log |
-| Baseline flush interval | 300 seconds | Frequency of durable baseline snapshots |
 | Burst window | 10 minutes | Maximum gap between events in one burst |
-| Git overlay | Enabled | Shows read-only repository status |
-| Git refresh interval | 5 seconds | Frequency of Git status refreshes |
 
 ## Local data and privacy
 
 Activity Atlas does not make network requests and does not collect telemetry. Runtime data stays under the plugin directory inside the vault configuration folder:
 
+Activity Atlas does not inventory the vault on startup. It subscribes only to Obsidian's live create, modify, rename, and delete events while the app is open. For line statistics, it reads only the changed text file and keeps bounded comparison text in memory for the current session.
+
 - `activity.jsonl` — bounded activity log.
-- `baseline.gz` — compressed reconciliation baseline.
 - `writer.lock` — multi-instance writer coordination.
 - `data.json` — Obsidian-managed plugin settings and local state.
-
-The optional Git overlay starts the local `git` executable and reads repository metadata. It does not send that information anywhere.
 
 ## Development
 

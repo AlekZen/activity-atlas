@@ -1,7 +1,7 @@
-import { ChangeEvent, ChangeOp, EventSource, GitCommitInfo, LineStat } from './types';
+import { ChangeEvent, ChangeOp, EventSource, LineStat } from './types';
 
 export interface CoalescedChange {
-  op: Exclude<ChangeOp, 'commit'>;
+  op: ChangeOp;
   path: string;
   oldPath?: string;
   firstTs: number;
@@ -21,14 +21,7 @@ export interface ActivityBurst {
   changes: CoalescedChange[];
 }
 
-export interface CommitMarker {
-  kind: 'commit';
-  id: string;
-  ts: number;
-  commit: GitCommitInfo;
-}
-
-export type TimelineItem = ActivityBurst | CommitMarker;
+export type TimelineItem = ActivityBurst;
 
 function addStats(left: LineStat | null, right: LineStat | null): LineStat | null {
   if (left === null || right === null) return null;
@@ -40,7 +33,6 @@ function coalesce(events: ChangeEvent[]): CoalescedChange[] {
   const latestModifyByPath = new Map<string, number>();
 
   for (const event of events) {
-    if (event.op === 'commit') continue;
     if (event.op === 'modify') {
       const existingIndex = latestModifyByPath.get(event.path);
       if (existingIndex !== undefined) {
@@ -97,8 +89,8 @@ function makeBurst(events: ChangeEvent[]): ActivityBurst {
 }
 
 /**
- * Builds a newest-first timeline. Commit markers are hard boundaries: activity
- * before and after a commit can never be merged into one burst.
+ * Builds a newest-first timeline of activity bursts, grouping same-day events
+ * that fall within the inactivity window into a single burst.
  */
 export function buildTimeline(events: ChangeEvent[], burstWindowMs: number): TimelineItem[] {
   const ordered = [...events].sort((a, b) => a.ts - b.ts || a.seq - b.seq);
@@ -115,17 +107,6 @@ export function buildTimeline(events: ChangeEvent[], burstWindowMs: number): Tim
   };
 
   for (const event of ordered) {
-    if (event.op === 'commit' && event.commit) {
-      flush();
-      chronological.push({
-        kind: 'commit',
-        id: `commit-${event.commit.oid}-${event.seq}`,
-        ts: event.ts,
-        commit: event.commit,
-      });
-      continue;
-    }
-
     const eventDay = calendarDayId(event.ts);
     const previous = pending[pending.length - 1];
     if (previous && (
@@ -134,7 +115,6 @@ export function buildTimeline(events: ChangeEvent[], burstWindowMs: number): Tim
     )) flush();
     if (pending.length === 0) pendingDay = eventDay;
     pending.push(event);
-    if (event.op === 'resync') flush();
   }
   flush();
 

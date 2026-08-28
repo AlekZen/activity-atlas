@@ -30,7 +30,7 @@ describe('EventFeed', () => {
 
   it('pushLoaded adopts external events and advances nextSeq', () => {
     const feed = new EventFeed(1);
-    feed.pushLoaded({ seq: 50, ts: 1, op: 'create', path: 'x.md', stat: null, source: 'reconcile' });
+    feed.pushLoaded({ seq: 50, ts: 1, op: 'create', path: 'x.md', stat: null, source: 'live' });
     expect(feed.peekNextSeq()).toBe(51);
     expect(feed.pending).toBe(1);
   });

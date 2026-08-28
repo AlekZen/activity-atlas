@@ -1,35 +1,28 @@
 import {
   App,
   Notice,
-  Platform,
   Plugin,
   PluginSettingTab,
   TFile,
 } from 'obsidian';
 import type { DataAdapter, SettingDefinitionItem, TAbstractFile } from 'obsidian';
-import { countLines, entryContentBytes, makeBinaryEntry, makeTextEntryBudgeted, parseBaseline, serializeBaseline } from './core/baseline';
-import type { Baseline, BaselineEntry } from './core/baseline';
 import { lineStat } from './core/diff';
 import { isExcluded, isTextFile } from './core/exclude';
 import type { ExcludeOptions } from './core/exclude';
 import { EventFeed } from './core/feed';
 import type { FileIO } from './core/fileio';
 import { appendEvents, readLog, rotateIfNeeded } from './core/logStore';
-import { reconcile } from './core/reconcile';
-import type { FileSnapshot } from './core/reconcile';
 import type { ChangeEvent } from './core/types';
 import { decideLock, ownsLock, parseLock } from './core/writerLock';
 import type { WriterLock } from './core/writerLock';
-import type { GitSnapshot } from './git/types';
-import type { GitStatusService } from './git/service';
 import { DEFAULT_SETTINGS, parseExtensions, parseGlobs } from './settings';
 import type { ActivityAtlasSettings } from './settings';
 import { VIEW_TYPE_ACTIVITY_ATLAS, ActivityAtlasTimelineView } from './ui/timelineView';
 import type { TimelineDataSource } from './ui/timelineView';
 
 const LOG_FILE = 'activity.jsonl';
-const BASELINE_FILE = 'baseline.gz';
 const LOCK_FILE = 'writer.lock';
+const LIVE_OPERATIONS = new Set(['create', 'modify', 'delete', 'rename']);
 const EVENT_FLUSH_MS = 2000;
 const ROTATE_MS = 3600_000;
 const LOCK_HEARTBEAT_MS = 30_000;
@@ -82,32 +75,44 @@ class AdapterFileIO implements FileIO {
 interface PersistedData {
   settings: ActivityAtlasSettings;
   lastSeq: number;
-  lastHead?: string;
   deviceId?: string;
+}
+
+function countLines(content: string): number {
+  if (content.length === 0) return 0;
+  let count = 1;
+  for (let index = 0; index < content.length; index++) {
+    if (content[index] === '\n') count += 1;
+  }
+  return count;
+}
+
+function contentBytes(content: string | null | undefined): number {
+  return content === null || content === undefined ? 0 : content.length * 2;
 }
 
 export default class ActivityAtlasPlugin extends Plugin implements TimelineDataSource {
   settings: ActivityAtlasSettings = { ...DEFAULT_SETTINGS };
   private io!: FileIO;
   private feed: EventFeed | null = null;
-  private baseline: Baseline = new Map();
-  private baselineDirty = false;
-  private baselineContentBytes = 0;
+  private snapshots = new Map<string, string | null>();
+  private snapshotContentBytes = 0;
   private lastSeq = 0;
-  private lastHead?: string;
   private deviceId = '';
   private events: ChangeEvent[] = [];
   private subscribers = new Set<() => void>();
-  private gitService: GitStatusService | null = null;
-  private gitSnapshot: GitSnapshot | null = null;
-  private gitRefreshTimer: number | null = null;
-  private gitRefreshGeneration = 0;
 
   async onload(): Promise<void> {
     const data = (await this.loadData()) as Partial<PersistedData> | null;
-    this.settings = { ...DEFAULT_SETTINGS, ...(data?.settings ?? {}) };
+    const savedSettings: Partial<ActivityAtlasSettings> = data?.settings ?? {};
+    this.settings = { ...DEFAULT_SETTINGS };
+    for (const key of Object.keys(DEFAULT_SETTINGS) as Array<keyof ActivityAtlasSettings>) {
+      const value = savedSettings[key];
+      if (value !== undefined) {
+        (this.settings as unknown as Record<string, unknown>)[key] = value;
+      }
+    }
     this.lastSeq = typeof data?.lastSeq === 'number' ? data.lastSeq : 0;
-    this.lastHead = typeof data?.lastHead === 'string' ? data.lastHead : undefined;
     this.deviceId = typeof data?.deviceId === 'string' ? data.deviceId : '';
     if (!this.deviceId) {
       this.deviceId = typeof crypto.randomUUID === 'function'
@@ -118,15 +123,24 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     const dataDir = `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
     this.io = new AdapterFileIO(this.app.vault.adapter, dataDir);
     await this.io.mkdirp();
+    if (await this.io.exists('baseline.gz')) await this.io.remove('baseline.gz');
     const existingLog = await readLog(this.io, LOG_FILE);
-    this.events = existingLog.events;
+    this.events = existingLog.events.filter(event =>
+      event.source === 'live' && LIVE_OPERATIONS.has(event.op),
+    );
+    if (this.events.length !== existingLog.events.length) {
+      await this.io.write(
+        LOG_FILE,
+        this.events.map(event => JSON.stringify(event)).join('\n') + (this.events.length ? '\n' : ''),
+      );
+    }
     this.lastSeq = Math.max(this.lastSeq, existingLog.maxSeq ?? 0);
     await this.persist();
 
     this.registerView(VIEW_TYPE_ACTIVITY_ATLAS, leaf => new ActivityAtlasTimelineView(leaf, this));
     this.addRibbonIcon('activity', 'Open Activity Atlas', () => void this.activateView());
     this.addCommand({ id: 'open-timeline', name: 'Open activity timeline', callback: () => void this.activateView() });
-    this.addCommand({ id: 'refresh-timeline', name: 'Refresh activity and Git status', callback: () => void this.refreshGit(true) });
+    this.addCommand({ id: 'refresh-timeline', name: 'Refresh activity', callback: () => this.notify() });
     this.addSettingTab(new ActivityAtlasSettingTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => void this.startFeed());
@@ -147,10 +161,6 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     return Math.max(0, this.settings.burstWindowMinutes) * 60_000;
   }
 
-  async loadGitSnapshot(): Promise<GitSnapshot | null> {
-    if (this.settings.gitEnabled && !this.gitService) await this.initializeGitOverlay();
-    return this.gitSnapshot;
-  }
 
   subscribe(callback: () => void): () => void {
     this.subscribers.add(callback);
@@ -191,7 +201,6 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     if (decideLock(existing, this.deviceId, Date.now()) === 'standby') {
       new Notice('Activity Atlas is in read-only standby because another instance is recording this vault.');
       this.registerInterval(window.setInterval(() => void this.tryTakeover(), LOCK_HEARTBEAT_MS));
-      await this.initializeGitOverlay();
       return;
     }
     await this.writeLock();
@@ -212,44 +221,16 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     this.events = log.events;
     this.lastSeq = Math.max(this.lastSeq, log.maxSeq ?? 0);
     this.feed = new EventFeed(this.lastSeq);
-
-    let oldBaseline: Baseline | null = null;
-    if (await this.io.exists(BASELINE_FILE)) {
-      try {
-        oldBaseline = parseBaseline(await this.io.readBinary(BASELINE_FILE));
-      } catch {
-        new Notice('Activity Atlas rebuilt a damaged activity baseline.');
-      }
-    }
-
-    const snapshots = await this.scanVault(oldBaseline);
-    if (oldBaseline === null) {
-      this.baseline = new Map(snapshots.map(snapshot => [snapshot.path, { hash: snapshot.hash, content: snapshot.content }]));
-      this.emit('resync', '', { source: 'system', stat: null });
-    } else {
-      const result = reconcile(oldBaseline, snapshots, this.feed.peekNextSeq(), Date.now());
-      this.baseline = result.baseline;
-      for (const event of result.events) {
-        this.feed.pushLoaded(event);
-        this.events.push(event);
-      }
-    }
-    this.baselineContentBytes = 0;
-    for (const entry of this.baseline.values()) this.baselineContentBytes += entryContentBytes(entry);
-    this.baselineDirty = true;
-    await this.flushEvents();
-    await this.saveBaseline();
-    await this.rotate();
+    this.snapshots.clear();
+    this.snapshotContentBytes = 0;
 
     this.registerEvent(this.app.vault.on('create', file => void this.onCreate(file)));
     this.registerEvent(this.app.vault.on('modify', file => void this.onModify(file)));
     this.registerEvent(this.app.vault.on('delete', file => this.onDelete(file)));
     this.registerEvent(this.app.vault.on('rename', (file, oldPath) => void this.onRename(file, oldPath)));
     this.registerInterval(window.setInterval(() => void this.flushEvents(), EVENT_FLUSH_MS));
-    this.registerInterval(window.setInterval(() => void this.flushState(), this.settings.flushIntervalSec * 1000));
     this.registerInterval(window.setInterval(() => void this.rotate(), ROTATE_MS));
     this.registerInterval(window.setInterval(() => void this.writeLock(), LOCK_HEARTBEAT_MS));
-    await this.initializeGitOverlay();
     this.notify();
   }
 
@@ -259,36 +240,18 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     this.events.push(event);
     this.lastSeq = Math.max(this.lastSeq, event.seq);
     this.notify();
-    this.scheduleGitRefresh();
     return event;
   }
 
-  private async scanVault(previousBaseline: Baseline | null): Promise<FileSnapshot[]> {
-    const options = this.excludeOptions();
-    const maxFileBytes = this.settings.largeFileKb * 1024;
-    const budgetBytes = this.settings.baselineContentBudgetKb * 1024;
-    let usedBytes = 0;
-    const snapshots: FileSnapshot[] = [];
-    for (const file of this.app.vault.getFiles()) {
-      if (isExcluded(file.path, options)) continue;
-      if (isTextFile(file.path, options.trackedExtensions) && file.stat.size <= maxFileBytes) {
-        try {
-          const content = await this.app.vault.cachedRead(file);
-          const entry = makeTextEntryBudgeted(content, usedBytes, budgetBytes);
-          snapshots.push({ path: file.path, hash: entry.hash, content: entry.content, mtime: file.stat.mtime });
-          usedBytes += entryContentBytes(entry);
-        } catch {
-          const previous = previousBaseline?.get(file.path);
-          const entry = previous ?? makeBinaryEntry(file.stat.size, file.stat.mtime);
-          snapshots.push({ path: file.path, hash: entry.hash, content: entry.content, mtime: file.stat.mtime });
-          usedBytes += entryContentBytes(entry);
-        }
-      } else {
-        const entry = makeBinaryEntry(file.stat.size, file.stat.mtime);
-        snapshots.push({ path: file.path, hash: entry.hash, content: null, mtime: file.stat.mtime });
-      }
-    }
-    return snapshots;
+  private replaceSnapshot(path: string, content: string | null): void {
+    this.snapshotContentBytes -= contentBytes(this.snapshots.get(path));
+    const budgetBytes = this.settings.comparisonContentBudgetKb * 1024;
+    const retained = content !== null
+      && this.snapshotContentBytes + contentBytes(content) <= budgetBytes
+      ? content
+      : null;
+    this.snapshots.set(path, retained);
+    this.snapshotContentBytes += contentBytes(retained);
   }
 
   private shouldTrackText(file: TFile): boolean {
@@ -302,28 +265,20 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     return isExcluded(path, this.excludeOptions());
   }
 
-  private replaceBaseline(path: string, entry: BaselineEntry): void {
-    const previous = this.baseline.get(path);
-    if (previous) this.baselineContentBytes -= entryContentBytes(previous);
-    this.baseline.set(path, entry);
-    this.baselineContentBytes += entryContentBytes(entry);
-    this.baselineDirty = true;
-  }
 
   private async onCreate(file: TAbstractFile): Promise<void> {
     if (!(file instanceof TFile) || this.isExcludedPath(file.path)) return;
     try {
       if (this.shouldTrackText(file)) {
         const content = await this.app.vault.cachedRead(file);
-        const entry = makeTextEntryBudgeted(content, this.baselineContentBytes, this.settings.baselineContentBudgetKb * 1024);
-        this.replaceBaseline(file.path, entry);
+        this.replaceSnapshot(file.path, content);
         this.emit('create', file.path, { stat: { added: countLines(content), removed: 0 } });
       } else {
-        this.replaceBaseline(file.path, makeBinaryEntry(file.stat.size, file.stat.mtime));
+        this.replaceSnapshot(file.path, null);
         this.emit('create', file.path, { stat: null });
       }
     } catch {
-      // Reconciliation recovers unreadable placeholders later.
+      // Ignore unreadable files; a later live event can capture them.
     }
   }
 
@@ -332,31 +287,29 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     try {
       if (this.shouldTrackText(file)) {
         const content = await this.app.vault.cachedRead(file);
-        const previous = this.baseline.get(file.path);
-        const stat = previous?.content !== null && previous?.content !== undefined
-          ? lineStat(previous.content, content)
+        const previous = this.snapshots.get(file.path);
+        const stat = previous !== null && previous !== undefined
+          ? lineStat(previous, content)
           : null;
-        const entry = makeTextEntryBudgeted(content, this.baselineContentBytes, this.settings.baselineContentBudgetKb * 1024);
-        this.replaceBaseline(file.path, entry);
+        this.replaceSnapshot(file.path, content);
         this.emit('modify', file.path, { stat });
       } else {
-        this.replaceBaseline(file.path, makeBinaryEntry(file.stat.size, file.stat.mtime));
+        this.replaceSnapshot(file.path, null);
         this.emit('modify', file.path, { stat: null });
       }
     } catch {
-      // Reconciliation recovers unreadable placeholders later.
+      // Ignore unreadable files; a later live event can capture them.
     }
   }
 
   private onDelete(file: TAbstractFile): void {
     if (!(file instanceof TFile) || this.isExcludedPath(file.path)) return;
-    const previous = this.baseline.get(file.path);
-    const stat = previous?.content !== null && previous?.content !== undefined
-      ? { added: 0, removed: countLines(previous.content) }
+    const previous = this.snapshots.get(file.path);
+    const stat = previous !== null && previous !== undefined
+      ? { added: 0, removed: countLines(previous) }
       : null;
-    if (previous) this.baselineContentBytes -= entryContentBytes(previous);
-    this.baseline.delete(file.path);
-    this.baselineDirty = true;
+    this.snapshotContentBytes -= contentBytes(previous);
+    this.snapshots.delete(file.path);
     this.emit('delete', file.path, { stat });
   }
 
@@ -369,12 +322,12 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
       await this.onCreate(file);
       return;
     }
-    const entry = this.baseline.get(oldPath);
-    if (entry) {
-      this.baseline.delete(oldPath);
-      if (newExcluded) this.baselineContentBytes -= entryContentBytes(entry);
-      else this.baseline.set(file.path, entry);
-      this.baselineDirty = true;
+    const hadEntry = this.snapshots.has(oldPath);
+    const entry = this.snapshots.get(oldPath);
+    if (hadEntry) {
+      this.snapshots.delete(oldPath);
+      if (newExcluded) this.snapshotContentBytes -= contentBytes(entry);
+      else this.snapshots.set(file.path, entry ?? null);
     }
     if (newExcluded) this.emit('delete', oldPath, { stat: null });
     else this.emit('rename', file.path, { oldPath, stat: { added: 0, removed: 0 } });
@@ -393,16 +346,6 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     }
   }
 
-  private async saveBaseline(): Promise<void> {
-    if (!this.baselineDirty) return;
-    await this.io.writeBinary(BASELINE_FILE, serializeBaseline(this.baseline));
-    this.baselineDirty = false;
-  }
-
-  private async flushState(): Promise<void> {
-    await this.flushEvents();
-    await this.saveBaseline();
-  }
 
   private async rotate(): Promise<void> {
     try {
@@ -425,66 +368,11 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
     }
   }
 
-  private async initializeGitOverlay(): Promise<void> {
-    if (this.gitService) return;
-    if (!this.settings.gitEnabled || !Platform.isDesktopApp) return;
-    const adapter = this.app.vault.adapter as DataAdapter & { getBasePath?: () => string };
-    if (typeof adapter.getBasePath !== 'function') return;
-    try {
-      const module = await import('./git/service');
-      this.gitService = new module.GitStatusService(adapter.getBasePath());
-      await this.refreshGit(false);
-      this.registerInterval(window.setInterval(() => void this.refreshGit(true), this.settings.gitRefreshSec * 1000));
-    } catch (error) {
-      console.warn('Activity Atlas Git overlay is unavailable', error);
-    }
-  }
-
-  private scheduleGitRefresh(): void {
-    if (!this.gitService) return;
-    if (this.gitRefreshTimer !== null) window.clearTimeout(this.gitRefreshTimer);
-    this.gitRefreshTimer = window.setTimeout(() => {
-      this.gitRefreshTimer = null;
-      void this.refreshGit(true);
-    }, 350);
-  }
-
-  private async refreshGit(recordCommit: boolean): Promise<void> {
-    if (!this.settings.gitEnabled) {
-      this.gitSnapshot = null;
-      this.notify();
-      return;
-    }
-    if (!this.gitService) {
-      await this.initializeGitOverlay();
-      if (!this.gitService) return;
-    }
-    const generation = ++this.gitRefreshGeneration;
-    const snapshot = await this.gitService.refresh();
-    if (generation !== this.gitRefreshGeneration) return;
-    this.gitSnapshot = snapshot;
-    if (snapshot.available && snapshot.head) {
-      if (recordCommit && this.lastHead && snapshot.head !== this.lastHead && snapshot.latestCommit) {
-        this.emit('commit', '', {
-          source: 'git',
-          ts: snapshot.latestCommit.ts,
-          stat: null,
-          commit: snapshot.latestCommit,
-        });
-      }
-      if (this.lastHead !== snapshot.head) {
-        this.lastHead = snapshot.head;
-        await this.persist();
-      }
-    }
-    this.notify();
-  }
 
   private async persist(): Promise<void> {
     const data: PersistedData = {
       settings: this.settings,
       lastSeq: this.lastSeq,
-      lastHead: this.lastHead,
       deviceId: this.deviceId,
     };
     await this.saveData(data);
@@ -496,10 +384,9 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
   }
 
   onunload(): void {
-    if (this.gitRefreshTimer !== null) window.clearTimeout(this.gitRefreshTimer);
     void (async () => {
       if (!this.feed) return;
-      await this.flushState();
+      await this.flushEvents();
       try {
         const existing = await this.readLock();
         if (ownsLock(existing, this.deviceId)) await this.io.remove(LOCK_FILE);
@@ -524,7 +411,7 @@ class ActivityAtlasSettingTab extends PluginSettingTab {
       items: [
         {
           name: 'Local activity',
-          desc: 'Activity stays local to this vault. Git integration is read-only and optional.',
+          desc: 'Activity stays local to this vault and is recorded only while Obsidian is open.',
           searchable: false,
         },
         {
@@ -534,25 +421,6 @@ class ActivityAtlasSettingTab extends PluginSettingTab {
             type: 'number',
             key: 'burstWindowMinutes',
             min: 1,
-            max: 30,
-            step: 1,
-          },
-        },
-        {
-          name: 'Read-only Git overlay',
-          desc: 'Shows staged, uncommitted, untracked, ignored, and committed states when desktop Git is available.',
-          control: {
-            type: 'toggle',
-            key: 'gitEnabled',
-          },
-        },
-        {
-          name: 'Git refresh interval',
-          desc: 'Seconds between read-only Git status refreshes.',
-          control: {
-            type: 'number',
-            key: 'gitRefreshSec',
-            min: 2,
             max: 30,
             step: 1,
           },
@@ -586,11 +454,11 @@ class ActivityAtlasSettingTab extends PluginSettingTab {
           },
         },
         {
-          name: 'Baseline content budget',
-          desc: 'Maximum KB of text retained locally for line statistics.',
+          name: 'Live comparison budget',
+          desc: 'Maximum KB of text kept in memory for line statistics during the current session.',
           control: {
             type: 'number',
-            key: 'baselineContentBudgetKb',
+            key: 'comparisonContentBudgetKb',
             min: 1,
             step: 1,
           },

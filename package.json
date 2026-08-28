@@ -1,7 +1,7 @@
 {
   "name": "activity-atlas",
-  "version": "0.1.2",
-  "description": "Live activity timeline for Obsidian vaults with optional read-only Git status.",
+  "version": "0.1.3",
+  "description": "Local-first live activity timeline for Obsidian vaults.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -12,8 +12,7 @@
     "obsidian",
     "obsidian-plugin",
     "activity",
-    "timeline",
-    "git"
+    "timeline"
   ],
   "author": "Alek",
   "license": "MIT",
@@ -23,8 +22,5 @@
     "obsidian": "^1.13.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
-  },
-  "dependencies": {
-    "fflate": "^0.8.2"
   }
 }

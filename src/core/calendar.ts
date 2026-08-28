@@ -5,7 +5,6 @@ export interface ActivityDaySummary {
   timestamp: number;
   eventCount: number;
   fileCount: number;
-  commitCount: number;
 }
 
 export interface CalendarDayCell {
@@ -69,16 +68,11 @@ export function summarizeActivityDays(events: ChangeEvent[]): Map<string, Activi
       timestamp: event.ts,
       eventCount: 0,
       fileCount: 0,
-      commitCount: 0,
       paths: new Set<string>(),
     };
     existing.timestamp = Math.max(existing.timestamp, event.ts);
     existing.eventCount += 1;
     if (event.path) existing.paths.add(event.path);
-    if (event.op === 'commit') {
-      existing.commitCount += 1;
-      for (const path of event.commit?.paths ?? []) existing.paths.add(path);
-    }
     mutable.set(key, existing);
   }
 
@@ -89,7 +83,6 @@ export function summarizeActivityDays(events: ChangeEvent[]): Map<string, Activi
       timestamp: summary.timestamp,
       eventCount: summary.eventCount,
       fileCount: summary.paths.size,
-      commitCount: summary.commitCount,
     });
   }
   return summaries;

@@ -1,9 +1,9 @@
 {
   "id": "activity-atlas",
   "name": "Activity Atlas",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "minAppVersion": "1.13.0",
-  "description": "Visualizes live vault activity as a burst-based timeline with optional read-only Git status.",
+  "description": "Visualizes live vault activity locally as a readable burst-based timeline.",
   "author": "Alek",
-  "isDesktopOnly": true
+  "isDesktopOnly": false
 }

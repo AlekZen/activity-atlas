@@ -4,6 +4,17 @@ All notable changes to Activity Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/).
 
+## [0.1.3] - 2026-08-28
+
+### Removed
+
+- Removed the optional Git overlay entirely, including its status and commit display, Git-state filter, and `gitEnabled`/`gitRefreshSec` settings. Activity Atlas no longer spawns the Git executable or any other child process, and no longer requires Git on `PATH`.
+- Removed the global startup scan and offline-change reconstruction (baseline snapshotting and reconciliation) that detected edits made while Obsidian was closed, eliminating vault-wide file enumeration on launch. Activity Atlas now records only activity observed live while Obsidian is open; the persisted live event history is unaffected.
+
+### Changed
+
+- Enabled Activity Atlas on Obsidian mobile now that the plugin uses only cross-platform Obsidian APIs.
+
 ## [0.1.2] - 2026-08-28
 
 ### Fixed
@@ -44,3 +55,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 [0.1.0]: https://github.com/AlekZen/activity-atlas/releases/tag/0.1.0
 [0.1.1]: https://github.com/AlekZen/activity-atlas/releases/tag/0.1.1
 [0.1.2]: https://github.com/AlekZen/activity-atlas/releases/tag/0.1.2
+[0.1.3]: https://github.com/AlekZen/activity-atlas/releases/tag/0.1.3

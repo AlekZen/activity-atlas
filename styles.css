@@ -20,8 +20,7 @@
 .activity-atlas__controls,
 .activity-atlas__stats,
 .activity-atlas__change,
-.activity-atlas__change-detail,
-.activity-atlas__commit {
+.activity-atlas__change-detail {
   display: flex;
   align-items: center;
 }
@@ -68,9 +67,7 @@
   max-width: 48%;
 }
 
-.activity-atlas__stats span,
-.activity-atlas__git,
-.activity-atlas__source {
+.activity-atlas__stats span {
   border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
   background: var(--background-secondary);
@@ -79,16 +76,6 @@
   line-height: 1.5;
   padding: 1px 6px;
   white-space: nowrap;
-}
-
-.activity-atlas__stats .is-dirty {
-  border-color: color-mix(in srgb, var(--atlas-modify) 40%, var(--background-modifier-border));
-  color: var(--text-normal);
-}
-
-.activity-atlas__stats .is-clean {
-  border-color: color-mix(in srgb, var(--atlas-create) 35%, var(--background-modifier-border));
-  color: var(--text-normal);
 }
 
 .activity-atlas__controls {
@@ -286,16 +273,6 @@
   opacity: 0.86;
 }
 
-.activity-atlas__calendar-day.has-commit .activity-atlas__calendar-pulse {
-  right: 4px;
-  bottom: 3px;
-  left: auto;
-  width: 5px;
-  height: 5px;
-  border-radius: 1px;
-  transform: rotate(45deg);
-}
-
 .activity-atlas .activity-atlas__calendar-day:focus-visible {
   outline-offset: -2px;
 }
@@ -364,8 +341,7 @@
   text-transform: uppercase;
 }
 
-.activity-atlas__burst,
-.activity-atlas__commit {
+.activity-atlas__burst {
   position: relative;
   margin: 0 0 9px;
   border: 1px solid var(--background-modifier-border);
@@ -391,8 +367,7 @@
   display: none;
 }
 
-.activity-atlas__burst-title,
-.activity-atlas__commit-title {
+.activity-atlas__burst-title {
   overflow: hidden;
   color: var(--text-normal);
   font-size: var(--font-ui-small);
@@ -401,8 +376,7 @@
   white-space: nowrap;
 }
 
-.activity-atlas__burst-meta,
-.activity-atlas__commit-meta {
+.activity-atlas__burst-meta {
   color: var(--text-faint);
   font-size: var(--font-ui-smaller);
   white-space: nowrap;
@@ -518,46 +492,6 @@
   font-family: var(--font-monospace);
 }
 
-.activity-atlas__git {
-  flex: 0 0 auto;
-  max-width: 112px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.activity-atlas__git.is-modified,
-.activity-atlas__git.is-staged-modified {
-  border-color: color-mix(in srgb, var(--atlas-modify) 40%, var(--background-modifier-border));
-  color: var(--text-normal);
-}
-
-.activity-atlas__git.is-staged {
-  border-color: color-mix(in srgb, var(--atlas-rename) 40%, var(--background-modifier-border));
-  color: var(--text-normal);
-}
-
-.activity-atlas__git.is-untracked {
-  border-color: color-mix(in srgb, var(--atlas-create) 40%, var(--background-modifier-border));
-  color: var(--text-normal);
-}
-
-.activity-atlas__git.is-deleted {
-  border-color: color-mix(in srgb, var(--atlas-delete) 40%, var(--background-modifier-border));
-  color: var(--text-normal);
-}
-.activity-atlas__git.is-ignored { opacity: 0.55; }
-
-.activity-atlas__commit {
-  gap: 9px;
-  padding: 9px 10px;
-  background: color-mix(in srgb, var(--atlas-accent) 6%, var(--background-secondary-alt));
-}
-
-.activity-atlas__commit .activity-atlas__rail-dot {
-  border-radius: 2px;
-  transform: rotate(45deg);
-}
-
 .activity-atlas__empty {
   display: grid;
   gap: 4px;
@@ -634,10 +568,6 @@
   .activity-atlas__burst > summary {
     grid-template-columns: 1fr;
     gap: 2px;
-  }
-
-  .activity-atlas__git {
-    display: none;
   }
 }
 

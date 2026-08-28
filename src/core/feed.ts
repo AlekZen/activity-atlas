@@ -1,11 +1,10 @@
-import { ChangeEvent, ChangeOp, EventSource, GitCommitInfo, LineStat } from './types';
+import { ChangeEvent, ChangeOp, EventSource, LineStat } from './types';
 
 export interface PushOptions {
   oldPath?: string;
   stat?: LineStat | null;
   source?: EventSource;
   ts?: number;
-  commit?: GitCommitInfo;
 }
 
 /** 事件队列：分配 seq、缓冲待写事件 */
@@ -26,13 +25,12 @@ export class EventFeed {
       stat: opts.stat ?? null,
       source: opts.source ?? 'live',
       ...(opts.oldPath !== undefined ? { oldPath: opts.oldPath } : {}),
-      ...(opts.commit !== undefined ? { commit: opts.commit } : {}),
     };
     this.queue.push(e);
     return e;
   }
 
-  /** 接收外部已编号事件（如 reconcile 结果），并把序号推进到其后 */
+  /** 接收外部已编号事件（如失败重试后重新入队的事件），并把序号推进到其后 */
   pushLoaded(e: ChangeEvent): void {
     this.queue.push(e);
     if (e.seq >= this.nextSeq) this.nextSeq = e.seq + 1;

@@ -9,7 +9,7 @@ const PROFILE = process.env.VAULT_PULSE_PROFILE === '1';
 const BURST_WINDOW_MS = 10 * 60_000;
 const BASE_TS = new Date(2026, 7, 28, 12).getTime();
 const SIZES = [100, 1_000, 10_000, 50_000] as const;
-const OPERATIONS: Exclude<ChangeOp, 'commit' | 'resync'>[] = ['modify', 'modify', 'modify', 'create', 'rename', 'delete'];
+const OPERATIONS: ChangeOp[] = ['modify', 'modify', 'modify', 'create', 'rename', 'delete'];
 
 interface ProfileRow {
   events: number;
