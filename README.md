@@ -1,13 +1,14 @@
 # Activity Atlas
 
-Visualize activity across an Obsidian vault as a compact, burst-based timeline.
+A local, live activity timeline for every file in your Obsidian vault.
 
 [![GitHub release](https://img.shields.io/github/v/release/AlekZen/activity-atlas)](https://github.com/AlekZen/activity-atlas/releases)
 [![License: MIT](https://img.shields.io/github/license/AlekZen/activity-atlas)](LICENSE)
+[![CI](https://github.com/AlekZen/activity-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/AlekZen/activity-atlas/actions/workflows/ci.yml)
 
-Activity Atlas records file activity locally and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
+Activity Atlas turns Obsidian's live file events into compact, readable activity bursts. It is built for large vaults where a flat list of recently edited Markdown notes does not show the whole picture.
 
-> Activity Atlas works on desktop and mobile without executing external commands.
+> **Live-only by design:** Activity Atlas records changes while Obsidian is open. It does not scan the vault at startup, reconstruct changes made while Obsidian was closed, execute external commands, or use network services.
 
 ## Screenshots
 
@@ -29,6 +30,17 @@ Activity Atlas records file activity locally and groups noisy editing sessions i
 - Coordinates multiple Obsidian instances with a writer lock so only one instance records.
 - Uses no network services, telemetry, accounts, or advertising.
 
+## Scope and privacy
+
+| Capability | Contract |
+|---|---|
+| Network requests and telemetry | None |
+| Shell commands and external processes | None |
+| Vault inventory at startup | None |
+| Reading user content | Only the changed text file, when line statistics are enabled for its extension |
+| Writing user content | None |
+| Changes made while Obsidian is closed | Not observed or reconstructed |
+
 ## Requirements
 
 - Obsidian 1.13.0 or later on desktop or mobile.
@@ -37,7 +49,7 @@ Activity Atlas records file activity locally and groups noisy editing sessions i
 
 ### Community Plugins
 
-After the initial Community directory review is approved:
+Activity Atlas is awaiting its initial Community directory listing. Once it is available:
 
 1. Open **Settings → Community plugins** in Obsidian.
 2. Select **Browse** and search for **Activity Atlas**.
@@ -81,15 +93,15 @@ When the activity calendar is open:
 | Retention | 90 days / 50,000 events | Bounds the local activity log |
 | Burst window | 10 minutes | Maximum gap between events in one burst |
 
-## Local data and privacy
+## Local data
 
-Activity Atlas does not make network requests and does not collect telemetry. Runtime data stays under the plugin directory inside the vault configuration folder:
+Runtime data stays under `<vault>/.obsidian/plugins/activity-atlas/`:
 
-Activity Atlas does not inventory the vault on startup. It subscribes only to Obsidian's live create, modify, rename, and delete events while the app is open. For line statistics, it reads only the changed text file and keeps bounded comparison text in memory for the current session.
-
-- `activity.jsonl` — bounded activity log.
+- `activity.jsonl` — bounded event history, including affected file paths and event metadata.
 - `writer.lock` — multi-instance writer coordination.
 - `data.json` — Obsidian-managed plugin settings and local state.
+
+Comparison text used to calculate line statistics is bounded by the live comparison budget, remains in memory for the current session, and is not persisted.
 
 ## Development
 
@@ -101,8 +113,15 @@ npm run build
 
 The production build writes `main.js` at the repository root. A release must attach `main.js`, `manifest.json`, and `styles.css`, and its tag must match `manifest.json`.
 
+CI runs the test suite and production build. Tagged releases publish the three required plugin files with [GitHub artifact attestations](https://github.com/AlekZen/activity-atlas/attestations).
+
 ## Origin and license
 
-Activity Atlas began as a derivative of [Vault Change Feed](https://github.com/kains2866/vault-change-feed) by tiyukains. The product, interface, and storage contract have since diverged substantially. The original author and copyright remain credited in [LICENSE](LICENSE).
+Activity Atlas began as a derivative of [Vault Change Feed](https://github.com/kains2866/vault-change-feed) by tiyukains (`@kains2866`). The product, interface, and storage contract have since diverged substantially.
 
-Activity Atlas is distributed under the MIT License.
+- Portions derived from Vault Change Feed are copyright (c) 2026 tiyukains.
+- Activity Atlas modifications are copyright (c) 2026 Alek (AlekZen).
+
+The combined work is distributed under the [MIT License](LICENSE). MIT permits use, modification, redistribution, sublicensing, and sale, provided both copyright notices and the MIT permission notice remain with copies or substantial portions of the software.
+
+This license grant is separate from [Obsidian's Community plugin policy for derivatives](https://docs.obsidian.md/Developer+policies), which governs eligibility for the official directory.
