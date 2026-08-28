@@ -6,7 +6,7 @@ import { buildTimeline } from '../core/timeline';
 import type { ActivityBurst, CoalescedChange, TimelineItem } from '../core/timeline';
 import type { GitSnapshot } from '../git/types';
 
-export const VIEW_TYPE_VAULT_PULSE = 'vault-pulse-timeline';
+export const VIEW_TYPE_ACTIVITY_ATLAS = 'activity-atlas-timeline';
 
 export interface TimelineDataSource {
   loadEvents(): Promise<ChangeEvent[]>;
@@ -87,7 +87,7 @@ function dayLabel(timestamp: number): string {
   return formatted;
 }
 
-export class VaultPulseTimelineView extends ItemView {
+export class ActivityAtlasTimelineView extends ItemView {
   private events: ChangeEvent[] = [];
   private gitSnapshot: GitSnapshot | null = null;
   private activityDays = new Map<string, ActivityDaySummary>();
@@ -115,11 +115,11 @@ export class VaultPulseTimelineView extends ItemView {
   }
 
   getViewType(): string {
-    return VIEW_TYPE_VAULT_PULSE;
+    return VIEW_TYPE_ACTIVITY_ATLAS;
   }
 
   getDisplayText(): string {
-    return 'Vault Pulse';
+    return 'Activity Atlas';
   }
 
   getIcon(): string {
@@ -128,11 +128,11 @@ export class VaultPulseTimelineView extends ItemView {
 
   async onOpen(): Promise<void> {
     this.containerEl.empty();
-    this.containerEl.addClass('vault-pulse-view');
-    const root = this.containerEl.createDiv({ cls: 'vault-pulse' });
+    this.containerEl.addClass('activity-atlas-view');
+    const root = this.containerEl.createDiv({ cls: 'activity-atlas' });
     this.renderHeader(root);
     this.renderControls(root);
-    this.timelineEl = root.createDiv({ cls: 'vault-pulse__timeline', attr: { 'aria-live': 'polite' } });
+    this.timelineEl = root.createDiv({ cls: 'activity-atlas__timeline', attr: { 'aria-live': 'polite' } });
     if (this.source.subscribe) this.unsubscribe = this.source.subscribe(() => this.scheduleRefresh());
     await this.refresh();
   }
@@ -147,19 +147,19 @@ export class VaultPulseTimelineView extends ItemView {
   }
 
   private renderHeader(root: HTMLElement): void {
-    const header = root.createDiv({ cls: 'vault-pulse__header' });
-    const identity = header.createDiv({ cls: 'vault-pulse__identity' });
-    identity.createSpan({ cls: 'vault-pulse__live-dot', attr: { 'aria-hidden': 'true' } });
+    const header = root.createDiv({ cls: 'activity-atlas__header' });
+    const identity = header.createDiv({ cls: 'activity-atlas__identity' });
+    identity.createSpan({ cls: 'activity-atlas__live-dot', attr: { 'aria-hidden': 'true' } });
     const titleGroup = identity.createDiv();
-    titleGroup.createEl('h2', { text: 'Vault Pulse' });
+    titleGroup.createEl('h2', { text: 'Activity Atlas' });
     titleGroup.createEl('p', { text: 'Live activity, grouped into readable bursts.' });
-    this.statsEl = header.createDiv({ cls: 'vault-pulse__stats' });
+    this.statsEl = header.createDiv({ cls: 'activity-atlas__stats' });
   }
 
   private renderControls(root: HTMLElement): void {
-    const controls = root.createDiv({ cls: 'vault-pulse__controls' });
+    const controls = root.createDiv({ cls: 'activity-atlas__controls' });
     const search = controls.createEl('input', {
-      cls: 'vault-pulse__search',
+      cls: 'activity-atlas__search',
       attr: { type: 'search', placeholder: 'Filter by path…', 'aria-label': 'Filter activity by path' },
     });
     search.addEventListener('input', () => {
@@ -168,22 +168,22 @@ export class VaultPulseTimelineView extends ItemView {
       this.scheduleTimelineRender();
     });
 
-    const dateFilter = controls.createDiv({ cls: 'vault-pulse__date-filter' });
+    const dateFilter = controls.createDiv({ cls: 'activity-atlas__date-filter' });
     this.createSelect(dateFilter, 'Day', [['all', 'All days']], value => this.selectDay(value), 'day');
     this.calendarButton = dateFilter.createEl('button', {
-      cls: 'clickable-icon vault-pulse__calendar-toggle',
+      cls: 'clickable-icon activity-atlas__calendar-toggle',
       attr: {
         type: 'button',
         'aria-label': 'Open activity calendar',
         'aria-expanded': 'false',
-        'aria-controls': 'vault-pulse-calendar',
+        'aria-controls': 'activity-atlas-calendar',
       },
     });
     setIcon(this.calendarButton, 'calendar-days');
     this.calendarButton.addEventListener('click', () => this.toggleCalendar());
     this.calendarEl = dateFilter.createDiv({
-      cls: 'vault-pulse__calendar is-hidden',
-      attr: { id: 'vault-pulse-calendar' },
+      cls: 'activity-atlas__calendar is-hidden',
+      attr: { id: 'activity-atlas-calendar' },
     });
     this.calendarEl.addEventListener('keydown', event => this.handleCalendarKeydown(event));
 
@@ -216,13 +216,13 @@ export class VaultPulseTimelineView extends ItemView {
     });
 
     const refreshButton = controls.createEl('button', {
-      cls: 'clickable-icon vault-pulse__refresh',
+      cls: 'clickable-icon activity-atlas__refresh',
       attr: { type: 'button', 'aria-label': 'Refresh activity' },
     });
     setIcon(refreshButton, 'refresh-cw');
     refreshButton.addEventListener('click', () => void this.refresh());
 
-    const burstActions = controls.createDiv({ cls: 'vault-pulse__burst-actions' });
+    const burstActions = controls.createDiv({ cls: 'activity-atlas__burst-actions' });
     const expandButton = burstActions.createEl('button', {
       text: 'Expand all',
       attr: { type: 'button', 'aria-label': 'Expand all activity bursts' },
@@ -284,7 +284,7 @@ export class VaultPulseTimelineView extends ItemView {
     } catch (error) {
       if (generation !== this.refreshGeneration) return;
       this.timelineEl.empty();
-      const state = this.timelineEl.createDiv({ cls: 'vault-pulse__empty' });
+      const state = this.timelineEl.createDiv({ cls: 'activity-atlas__empty' });
       state.createEl('strong', { text: 'Activity could not be loaded.' });
       state.createEl('span', { text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -437,7 +437,7 @@ export class VaultPulseTimelineView extends ItemView {
       this.calendarFocusDay = localDayKey(new Date(year, month, 1, 12).getTime());
     }
 
-    const header = this.calendarEl.createDiv({ cls: 'vault-pulse__calendar-header' });
+    const header = this.calendarEl.createDiv({ cls: 'activity-atlas__calendar-header' });
     const previous = header.createEl('button', {
       cls: 'clickable-icon',
       attr: { type: 'button', 'aria-label': 'Previous month' },
@@ -457,7 +457,7 @@ export class VaultPulseTimelineView extends ItemView {
     next.addEventListener('click', () => this.shiftCalendarMonth(1));
 
     const weekdays = this.calendarEl.createDiv({
-      cls: 'vault-pulse__calendar-weekdays',
+      cls: 'activity-atlas__calendar-weekdays',
       attr: { 'aria-hidden': 'true' },
     });
     const monday = new Date(2021, 2, 1, 12);
@@ -468,7 +468,7 @@ export class VaultPulseTimelineView extends ItemView {
     }
 
     const grid = this.calendarEl.createDiv({
-      cls: 'vault-pulse__calendar-grid',
+      cls: 'activity-atlas__calendar-grid',
       attr: { role: 'grid', 'aria-label': `Activity calendar, ${year}-${month + 1}` },
     });
     const todayKey = localDayKey(Date.now());
@@ -485,7 +485,7 @@ export class VaultPulseTimelineView extends ItemView {
         : 'No recorded activity';
       const button = grid.createEl('button', {
         cls: [
-          'vault-pulse__calendar-day',
+          'activity-atlas__calendar-day',
           cell.inCurrentMonth ? '' : 'is-outside',
           activity ? 'has-activity' : '',
           activity?.commitCount ? 'has-commit' : '',
@@ -505,23 +505,23 @@ export class VaultPulseTimelineView extends ItemView {
       button.tabIndex = cell.key === this.calendarFocusDay ? 0 : -1;
       button.setAttribute('aria-disabled', String(!activity));
       if (cell.key === todayKey) button.setAttribute('aria-current', 'date');
-      button.createSpan({ cls: 'vault-pulse__calendar-number', text: String(cell.dayNumber) });
+      button.createSpan({ cls: 'activity-atlas__calendar-number', text: String(cell.dayNumber) });
       if (activity) {
         const level = maxEvents <= 1
           ? 1
           : Math.max(1, Math.ceil((Math.log1p(activity.eventCount) / Math.log1p(maxEvents)) * 4));
         button.dataset.level = String(level);
-        button.createSpan({ cls: 'vault-pulse__calendar-pulse', attr: { 'aria-hidden': 'true' } });
+        button.createSpan({ cls: 'activity-atlas__calendar-pulse', attr: { 'aria-hidden': 'true' } });
         button.addEventListener('click', () => this.selectDay(cell.key === this.day ? 'all' : cell.key, true));
       }
     }
 
     const eventCount = currentMonthActivity.reduce((total, summary) => total + summary.eventCount, 0);
-    const footer = this.calendarEl.createDiv({ cls: 'vault-pulse__calendar-footer' });
+    const footer = this.calendarEl.createDiv({ cls: 'activity-atlas__calendar-footer' });
     footer.createSpan({
       text: `${eventCount} ${eventCount === 1 ? 'event' : 'events'} · ${currentMonthActivity.length} active ${currentMonthActivity.length === 1 ? 'day' : 'days'}`,
     });
-    const actions = footer.createDiv({ cls: 'vault-pulse__calendar-actions' });
+    const actions = footer.createDiv({ cls: 'activity-atlas__calendar-actions' });
     const today = actions.createEl('button', { text: 'Today', attr: { type: 'button' } });
     today.addEventListener('click', () => {
       const current = new Date();
@@ -585,7 +585,7 @@ export class VaultPulseTimelineView extends ItemView {
     if (this.gitSnapshot?.available) this.statsEl.createSpan({ text: `${dirty} uncommitted`, cls: dirty ? 'is-dirty' : 'is-clean' });
 
     if (visible.length === 0) {
-      const empty = this.timelineEl.createDiv({ cls: 'vault-pulse__empty' });
+      const empty = this.timelineEl.createDiv({ cls: 'activity-atlas__empty' });
       empty.createEl('strong', { text: this.events.length ? 'No activity matches these filters.' : 'Your vault is quiet.' });
       empty.createEl('span', { text: this.events.length ? 'Clear a filter to bring events back.' : 'Create, edit, rename, or delete a file to start the pulse.' });
       return;
@@ -597,7 +597,7 @@ export class VaultPulseTimelineView extends ItemView {
       const timestamp = item.kind === 'commit' ? item.ts : item.endTs;
       const day = new Date(timestamp).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
       if (day !== lastDay) {
-        this.timelineEl.createDiv({ cls: 'vault-pulse__day', text: day });
+        this.timelineEl.createDiv({ cls: 'activity-atlas__day', text: day });
         lastDay = day;
       }
       if (item.kind === 'commit') this.renderCommit(item);
@@ -605,7 +605,7 @@ export class VaultPulseTimelineView extends ItemView {
     }
 
     if (items.length > visible.length) {
-      const more = this.timelineEl.createEl('button', { cls: 'vault-pulse__more', text: `Load ${Math.min(120, items.length - visible.length)} more` });
+      const more = this.timelineEl.createEl('button', { cls: 'activity-atlas__more', text: `Load ${Math.min(120, items.length - visible.length)} more` });
       more.addEventListener('click', () => {
         this.visibleItems += 120;
         this.renderTimeline();
@@ -614,23 +614,23 @@ export class VaultPulseTimelineView extends ItemView {
   }
 
   private renderCommit(item: Extract<TimelineItem, { kind: 'commit' }>): void {
-    const marker = this.timelineEl.createDiv({ cls: 'vault-pulse__commit' });
-    marker.createSpan({ cls: 'vault-pulse__rail-dot', attr: { 'aria-hidden': 'true' } });
+    const marker = this.timelineEl.createDiv({ cls: 'activity-atlas__commit' });
+    marker.createSpan({ cls: 'activity-atlas__rail-dot', attr: { 'aria-hidden': 'true' } });
     const body = marker.createDiv();
-    body.createDiv({ cls: 'vault-pulse__commit-title', text: item.commit.subject || 'Commit' });
-    body.createDiv({ cls: 'vault-pulse__commit-meta', text: `${item.commit.shortOid} · ${item.commit.author} · ${item.commit.paths.length} files` });
+    body.createDiv({ cls: 'activity-atlas__commit-title', text: item.commit.subject || 'Commit' });
+    body.createDiv({ cls: 'activity-atlas__commit-meta', text: `${item.commit.shortOid} · ${item.commit.author} · ${item.commit.paths.length} files` });
   }
 
   private renderBurst(burst: ActivityBurst, open: boolean): void {
-    const details = this.timelineEl.createEl('details', { cls: 'vault-pulse__burst' });
+    const details = this.timelineEl.createEl('details', { cls: 'activity-atlas__burst' });
     details.open = open;
-    details.createSpan({ cls: 'vault-pulse__rail-dot', attr: { 'aria-hidden': 'true' } });
+    details.createSpan({ cls: 'activity-atlas__rail-dot', attr: { 'aria-hidden': 'true' } });
     const summary = details.createEl('summary');
     const time = new Date(burst.endTs).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     const durationMinutes = Math.max(1, Math.ceil((burst.endTs - burst.startTs) / 60000));
-    summary.createDiv({ cls: 'vault-pulse__burst-title', text: `${time} · ${burst.fileCount} ${burst.fileCount === 1 ? 'file' : 'files'}` });
-    summary.createDiv({ cls: 'vault-pulse__burst-meta', text: `${burst.eventCount} events · ${durationMinutes} min` });
-    const list = details.createDiv({ cls: 'vault-pulse__changes' });
+    summary.createDiv({ cls: 'activity-atlas__burst-title', text: `${time} · ${burst.fileCount} ${burst.fileCount === 1 ? 'file' : 'files'}` });
+    summary.createDiv({ cls: 'activity-atlas__burst-meta', text: `${burst.eventCount} events · ${durationMinutes} min` });
+    const list = details.createDiv({ cls: 'activity-atlas__changes' });
 
     const renderChanges = (): void => {
       list.empty();
@@ -640,7 +640,7 @@ export class VaultPulseTimelineView extends ItemView {
       if (remaining <= 0) return;
       const nextCount = Math.min(CHANGES_PER_BURST, remaining);
       const more = list.createEl('button', {
-        cls: 'vault-pulse__more vault-pulse__changes-more',
+        cls: 'activity-atlas__more activity-atlas__changes-more',
         text: `Show ${nextCount} more changes`,
         attr: { type: 'button' },
       });
@@ -658,28 +658,28 @@ export class VaultPulseTimelineView extends ItemView {
   }
 
   private renderChange(parent: HTMLElement, change: CoalescedChange): void {
-    const row = parent.createDiv({ cls: `vault-pulse__change is-${change.op}` });
-    row.createSpan({ cls: 'vault-pulse__op-dot', attr: { 'aria-hidden': 'true' } });
-    const main = row.createDiv({ cls: 'vault-pulse__change-main' });
+    const row = parent.createDiv({ cls: `activity-atlas__change is-${change.op}` });
+    row.createSpan({ cls: 'activity-atlas__op-dot', attr: { 'aria-hidden': 'true' } });
+    const main = row.createDiv({ cls: 'activity-atlas__change-main' });
     const file = this.app.vault.getAbstractFileByPath(change.path);
     const pathButton = main.createEl('button', {
-      cls: 'vault-pulse__path',
+      cls: 'activity-atlas__path',
       attr: { type: 'button' },
     });
-    const icon = pathButton.createSpan({ cls: 'vault-pulse__file-icon', attr: { 'aria-hidden': 'true' } });
+    const icon = pathButton.createSpan({ cls: 'activity-atlas__file-icon', attr: { 'aria-hidden': 'true' } });
     setIcon(icon, fileIcon(change.path));
-    pathButton.createSpan({ cls: 'vault-pulse__path-text', text: change.path || OP_LABEL[change.op] });
+    pathButton.createSpan({ cls: 'activity-atlas__path-text', text: change.path || OP_LABEL[change.op] });
     pathButton.disabled = !(file instanceof TFile);
     if (file instanceof TFile) pathButton.addEventListener('click', () => void this.app.workspace.getLeaf(false).openFile(file));
-    const detail = main.createDiv({ cls: 'vault-pulse__change-detail' });
+    const detail = main.createDiv({ cls: 'activity-atlas__change-detail' });
     const operation = change.count > 1 ? `${OP_LABEL[change.op]} ×${change.count}` : OP_LABEL[change.op];
     detail.createSpan({ text: operation });
     if (change.oldPath) detail.createSpan({ text: `from ${change.oldPath}` });
-    if (change.stat) detail.createSpan({ text: `+${change.stat.added} −${change.stat.removed}`, cls: 'vault-pulse__diff' });
-    if (change.source === 'reconcile') detail.createSpan({ text: 'Recovered after restart', cls: 'vault-pulse__source' });
+    if (change.stat) detail.createSpan({ text: `+${change.stat.added} −${change.stat.removed}`, cls: 'activity-atlas__diff' });
+    if (change.source === 'reconcile') detail.createSpan({ text: 'Recovered after restart', cls: 'activity-atlas__source' });
 
     const gitStatus = this.gitSnapshot?.files[change.path];
-    const badge = row.createSpan({ cls: `vault-pulse__git is-${gitStatus?.state ?? 'clean'}` });
+    const badge = row.createSpan({ cls: `activity-atlas__git is-${gitStatus?.state ?? 'clean'}` });
     badge.setText(gitStatus ? gitStatus.state.replace('-', ' + ') : 'committed / clean');
   }
 }

@@ -1,6 +1,6 @@
 {
-  "id": "vault-pulse",
-  "name": "Vault Pulse",
+  "id": "activity-atlas",
+  "name": "Activity Atlas",
   "version": "0.1.0",
   "minAppVersion": "1.5.0",
   "description": "Visualizes live vault activity as a burst-based timeline with optional read-only Git status.",

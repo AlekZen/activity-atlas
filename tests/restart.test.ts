@@ -3,7 +3,7 @@ import { MemoryFileIO } from '../src/core/fileio';
 import { appendEvents, readLog } from '../src/core/logStore';
 import { EventFeed } from '../src/core/feed';
 
-const LOG_PATH = 'vault-pulse.jsonl';
+const LOG_PATH = 'activity-atlas.jsonl';
 
 describe('restart continuity', () => {
   it('drains a pending EventFeed on close and resumes seq without loss or duplication on restart', async () => {

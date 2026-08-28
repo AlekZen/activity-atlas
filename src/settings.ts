@@ -1,4 +1,4 @@
-export interface VaultPulseSettings {
+export interface ActivityAtlasSettings {
   /** Comma-separated text extensions that receive line-diff statistics. */
   trackedExtensions: string;
   /** Newline-separated glob patterns excluded from activity tracking. */
@@ -19,7 +19,7 @@ export interface VaultPulseSettings {
   gitRefreshSec: number;
 }
 
-export const DEFAULT_SETTINGS: VaultPulseSettings = {
+export const DEFAULT_SETTINGS: ActivityAtlasSettings = {
   trackedExtensions: 'md, markdown, txt, canvas, json, csv, yaml, yml, toml, js, mjs, cjs, ts, py, sh, html, css, xml, base',
   excludeGlobs: '',
   largeFileKb: 512,

@@ -24,8 +24,8 @@ import type { WriterLock } from './core/writerLock';
 import type { GitSnapshot } from './git/types';
 import type { GitStatusService } from './git/service';
 import { DEFAULT_SETTINGS, parseExtensions, parseGlobs } from './settings';
-import type { VaultPulseSettings } from './settings';
-import { VIEW_TYPE_VAULT_PULSE, VaultPulseTimelineView } from './ui/timelineView';
+import type { ActivityAtlasSettings } from './settings';
+import { VIEW_TYPE_ACTIVITY_ATLAS, ActivityAtlasTimelineView } from './ui/timelineView';
 import type { TimelineDataSource } from './ui/timelineView';
 
 const LOG_FILE = 'activity.jsonl';
@@ -81,14 +81,14 @@ class AdapterFileIO implements FileIO {
 }
 
 interface PersistedData {
-  settings: VaultPulseSettings;
+  settings: ActivityAtlasSettings;
   lastSeq: number;
   lastHead?: string;
   deviceId?: string;
 }
 
-export default class VaultPulsePlugin extends Plugin implements TimelineDataSource {
-  settings: VaultPulseSettings = { ...DEFAULT_SETTINGS };
+export default class ActivityAtlasPlugin extends Plugin implements TimelineDataSource {
+  settings: ActivityAtlasSettings = { ...DEFAULT_SETTINGS };
   private io!: FileIO;
   private feed: EventFeed | null = null;
   private baseline: Baseline = new Map();
@@ -124,19 +124,19 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
     this.lastSeq = Math.max(this.lastSeq, existingLog.maxSeq ?? 0);
     await this.persist();
 
-    this.registerView(VIEW_TYPE_VAULT_PULSE, leaf => new VaultPulseTimelineView(leaf, this));
-    this.addRibbonIcon('activity', 'Open Vault Pulse', () => void this.activateView());
+    this.registerView(VIEW_TYPE_ACTIVITY_ATLAS, leaf => new ActivityAtlasTimelineView(leaf, this));
+    this.addRibbonIcon('activity', 'Open Activity Atlas', () => void this.activateView());
     this.addCommand({ id: 'open-timeline', name: 'Open activity timeline', callback: () => void this.activateView() });
     this.addCommand({ id: 'refresh-timeline', name: 'Refresh activity and Git status', callback: () => void this.refreshGit(true) });
-    this.addSettingTab(new VaultPulseSettingTab(this.app, this));
+    this.addSettingTab(new ActivityAtlasSettingTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => void this.startFeed());
   }
 
   async activateView(): Promise<void> {
-    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_VAULT_PULSE)[0];
+    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_ACTIVITY_ATLAS)[0];
     const leaf = existing ?? this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf('tab');
-    await leaf.setViewState({ type: VIEW_TYPE_VAULT_PULSE, active: true });
+    await leaf.setViewState({ type: VIEW_TYPE_ACTIVITY_ATLAS, active: true });
     await this.app.workspace.revealLeaf(leaf);
   }
 
@@ -190,7 +190,7 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
   private async startFeed(): Promise<void> {
     const existing = await this.readLock();
     if (decideLock(existing, this.deviceId, Date.now()) === 'standby') {
-      new Notice('Vault Pulse is in read-only standby because another instance is recording this vault.');
+      new Notice('Activity Atlas is in read-only standby because another instance is recording this vault.');
       this.registerInterval(window.setInterval(() => void this.tryTakeover(), LOCK_HEARTBEAT_MS));
       await this.initializeGitOverlay();
       return;
@@ -219,7 +219,7 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
       try {
         oldBaseline = parseBaseline(await this.io.readBinary(BASELINE_FILE));
       } catch {
-        new Notice('Vault Pulse rebuilt a damaged activity baseline.');
+        new Notice('Activity Atlas rebuilt a damaged activity baseline.');
       }
     }
 
@@ -389,8 +389,8 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
       await this.persist();
     } catch (error) {
       for (const event of pending) this.feed.pushLoaded(event);
-      new Notice('Vault Pulse could not persist activity and will retry.');
-      console.error('Vault Pulse event flush failed', error);
+      new Notice('Activity Atlas could not persist activity and will retry.');
+      console.error('Activity Atlas event flush failed', error);
     }
   }
 
@@ -422,7 +422,7 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
         this.notify();
       }
     } catch (error) {
-      console.error('Vault Pulse log rotation failed', error);
+      console.error('Activity Atlas log rotation failed', error);
     }
   }
 
@@ -437,7 +437,7 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
       await this.refreshGit(false);
       this.registerInterval(window.setInterval(() => void this.refreshGit(true), this.settings.gitRefreshSec * 1000));
     } catch (error) {
-      console.warn('Vault Pulse Git overlay is unavailable', error);
+      console.warn('Activity Atlas Git overlay is unavailable', error);
     }
   }
 
@@ -511,15 +511,15 @@ export default class VaultPulsePlugin extends Plugin implements TimelineDataSour
   }
 }
 
-class VaultPulseSettingTab extends PluginSettingTab {
-  constructor(app: App, private readonly plugin: VaultPulsePlugin) {
+class ActivityAtlasSettingTab extends PluginSettingTab {
+  constructor(app: App, private readonly plugin: ActivityAtlasPlugin) {
     super(app, plugin);
   }
 
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Vault Pulse' });
+    containerEl.createEl('h2', { text: 'Activity Atlas' });
     containerEl.createEl('p', { text: 'Activity stays local to this vault. Git integration is read-only and optional.' });
     const settings = this.plugin.settings;
 
@@ -565,7 +565,7 @@ class VaultPulseSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Exclude paths')
-      .setDesc('One glob per line. Vault Pulse always excludes its own configuration directory.')
+      .setDesc('One glob per line. Activity Atlas always excludes its own configuration directory.')
       .addTextArea(text => text.setValue(settings.excludeGlobs).onChange(async value => {
         settings.excludeGlobs = value;
         await this.plugin.saveSettings();

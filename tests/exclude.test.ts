@@ -25,7 +25,7 @@ describe('globToRegExp', () => {
 
 describe('isExcluded', () => {
   it('configDir always excluded (incl. plugin own outputs)', () => {
-    expect(isExcluded('.obsidian/plugins/vault-pulse/activity.jsonl', opts)).toBe(true);
+    expect(isExcluded('.obsidian/plugins/activity-atlas/activity.jsonl', opts)).toBe(true);
     expect(isExcluded('.obsidian/workspace.json', opts)).toBe(true);
   });
   it('normal notes not excluded', () => {

@@ -16,7 +16,7 @@ export class GitStatusService {
 
   private run(args: string[]): Promise<string> {
     if (!args[0] || !READ_ONLY_COMMANDS.has(args[0])) {
-      return Promise.reject(new Error('Vault Pulse refused a non-read-only Git command.'));
+      return Promise.reject(new Error('Activity Atlas refused a non-read-only Git command.'));
     }
     return new Promise((resolve, reject) => {
       execFile(

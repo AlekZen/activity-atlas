@@ -1,5 +1,5 @@
 {
-  "name": "vault-pulse",
+  "name": "activity-atlas",
   "version": "0.1.0",
   "description": "Live activity timeline for Obsidian vaults with optional read-only Git status.",
   "main": "main.js",

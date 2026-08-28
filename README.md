@@ -1,23 +1,23 @@
-# Vault Pulse
+# Activity Atlas
 
 Visualize activity across an Obsidian vault as a compact, burst-based timeline.
 
-[![GitHub release](https://img.shields.io/github/v/release/AlekZen/vault-pulse)](https://github.com/AlekZen/vault-pulse/releases)
-[![License: MIT](https://img.shields.io/github/license/AlekZen/vault-pulse)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/AlekZen/activity-atlas)](https://github.com/AlekZen/activity-atlas/releases)
+[![License: MIT](https://img.shields.io/github/license/AlekZen/activity-atlas)](LICENSE)
 
-Vault Pulse records file activity locally, reconciles changes made while Obsidian was closed, and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
+Activity Atlas records file activity locally, reconciles changes made while Obsidian was closed, and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
 
-> Vault Pulse 0.1.0 is desktop-only. Its optional Git overlay invokes the local Git executable through a Node.js API.
+> Activity Atlas 0.1.0 is desktop-only. Its optional Git overlay invokes the local Git executable through a Node.js API.
 
 ## Screenshots
 
 ### Dark theme
 
-![Vault Pulse in Obsidian's dark theme](assets/vault-pulse-dark.png)
+![Activity Atlas in Obsidian's dark theme](assets/activity-atlas-dark.png)
 
 ### Light theme
 
-![Vault Pulse in Obsidian's light theme](assets/vault-pulse-light.png)
+![Activity Atlas in Obsidian's light theme](assets/activity-atlas-light.png)
 
 ## Features
 
@@ -44,21 +44,21 @@ Vault Pulse records file activity locally, reconciles changes made while Obsidia
 After the initial Community directory review is approved:
 
 1. Open **Settings → Community plugins** in Obsidian.
-2. Select **Browse** and search for **Vault Pulse**.
+2. Select **Browse** and search for **Activity Atlas**.
 3. Select **Install**, then **Enable**.
 
 ### Manual installation
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/AlekZen/vault-pulse/releases/latest).
-2. Create `<vault>/.obsidian/plugins/vault-pulse/`.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/AlekZen/activity-atlas/releases/latest).
+2. Create `<vault>/.obsidian/plugins/activity-atlas/`.
 3. Copy the three files into that folder.
-4. Reload Obsidian, then enable **Vault Pulse** under **Community plugins**.
+4. Reload Obsidian, then enable **Activity Atlas** under **Community plugins**.
 
 ## Usage
 
-Open Vault Pulse from the ribbon activity icon or run **Vault Pulse: Open activity timeline** from the command palette.
+Open Activity Atlas from the ribbon activity icon or run **Activity Atlas: Open activity timeline** from the command palette.
 
-The timeline updates while Obsidian is open. At startup, Vault Pulse compares the current vault with its previous baseline and records changes made by sync tools, command-line programs, or other applications while Obsidian was closed.
+The timeline updates while Obsidian is open. At startup, Activity Atlas compares the current vault with its previous baseline and records changes made by sync tools, command-line programs, or other applications while Obsidian was closed.
 
 ### Calendar keyboard controls
 
@@ -76,14 +76,14 @@ When the activity calendar is open:
 
 ## Git overlay
 
-The Git overlay is enabled by default on desktop and is strictly read-only. Vault Pulse allows only these commands:
+The Git overlay is enabled by default on desktop and is strictly read-only. Activity Atlas allows only these commands:
 
 - `git status`
 - `git rev-parse`
 - `git log`
 - `git diff-tree`
 
-It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages, commits, resets, checks out, or writes repository data. Disable the overlay in Vault Pulse settings if it is not needed.
+It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages, commits, resets, checks out, or writes repository data. Disable the overlay in Activity Atlas settings if it is not needed.
 
 ## Settings
 
@@ -101,7 +101,7 @@ It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages
 
 ## Local data and privacy
 
-Vault Pulse does not make network requests and does not collect telemetry. Runtime data stays under the plugin directory inside the vault configuration folder:
+Activity Atlas does not make network requests and does not collect telemetry. Runtime data stays under the plugin directory inside the vault configuration folder:
 
 - `activity.jsonl` — bounded activity log.
 - `baseline.gz` — compressed reconciliation baseline.
@@ -122,6 +122,6 @@ The production build writes `main.js` at the repository root. A release must att
 
 ## Origin and license
 
-Vault Pulse began as a derivative of [Vault Change Feed](https://github.com/kains2866/vault-change-feed) by tiyukains. The product, interface, and storage contract have since diverged substantially. The original author and copyright remain credited in [LICENSE](LICENSE).
+Activity Atlas began as a derivative of [Vault Change Feed](https://github.com/kains2866/vault-change-feed) by tiyukains. The product, interface, and storage contract have since diverged substantially. The original author and copyright remain credited in [LICENSE](LICENSE).
 
-Vault Pulse is distributed under the MIT License.
+Activity Atlas is distributed under the MIT License.

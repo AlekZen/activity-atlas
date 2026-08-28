@@ -51,4 +51,4 @@ jobs:
           main.js manifest.json styles.css
           --verify-tag
           --generate-notes
-          --title "Vault Pulse $GITHUB_REF_NAME"
+          --title "Activity Atlas $GITHUB_REF_NAME"

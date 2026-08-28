@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Vault Pulse are documented in this file.
+All notable changes to Activity Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/).
 
@@ -20,7 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
-- Reworked the upstream Vault Change Feed foundation into the Vault Pulse product and storage contract.
+- Reworked the upstream Vault Change Feed foundation into the Activity Atlas product and storage contract.
 - Declared the initial Community release desktop-only because the Git overlay uses Node.js process APIs.
 
-[0.1.0]: https://github.com/AlekZen/vault-pulse/releases/tag/0.1.0
+[0.1.0]: https://github.com/AlekZen/activity-atlas/releases/tag/0.1.0

@@ -164,7 +164,7 @@ describe('baseline persistence at scale', () => {
     let usedBytes = 0;
     for (let index = 0; index < PROFILE_ENTRY_COUNT; index++) {
       const prefix = `${index}:`;
-      const content = (prefix + 'vault-pulse-baseline-content|'.repeat(100))
+      const content = (prefix + 'activity-atlas-baseline-content|'.repeat(100))
         .slice(0, PROFILE_CONTENT_CHARS);
       const entry = makeTextEntryBudgeted(content, usedBytes, CONFIGURED_BUDGET_BYTES);
       usedBytes += entryContentBytes(entry);

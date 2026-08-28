@@ -1,76 +1,76 @@
-.vault-pulse-view {
-  --pulse-accent: var(--interactive-accent);
-  --pulse-create: var(--color-green);
-  --pulse-modify: var(--color-orange);
-  --pulse-delete: var(--color-red);
-  --pulse-rename: var(--color-purple);
-  --pulse-rail: color-mix(in srgb, var(--text-muted) 22%, transparent);
+.activity-atlas-view {
+  --atlas-accent: var(--interactive-accent);
+  --atlas-create: var(--color-green);
+  --atlas-modify: var(--color-orange);
+  --atlas-delete: var(--color-red);
+  --atlas-rename: var(--color-purple);
+  --atlas-rail: color-mix(in srgb, var(--text-muted) 22%, transparent);
   padding: 0;
 }
 
-.vault-pulse {
+.activity-atlas {
   min-width: 0;
   height: 100%;
   overflow: auto;
   padding: 14px 12px 40px;
 }
 
-.vault-pulse__header,
-.vault-pulse__identity,
-.vault-pulse__controls,
-.vault-pulse__stats,
-.vault-pulse__change,
-.vault-pulse__change-detail,
-.vault-pulse__commit {
+.activity-atlas__header,
+.activity-atlas__identity,
+.activity-atlas__controls,
+.activity-atlas__stats,
+.activity-atlas__change,
+.activity-atlas__change-detail,
+.activity-atlas__commit {
   display: flex;
   align-items: center;
 }
 
-.vault-pulse__header {
+.activity-atlas__header {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 14px;
 }
 
-.vault-pulse__identity {
+.activity-atlas__identity {
   gap: 9px;
   min-width: 0;
 }
 
-.vault-pulse__identity h2 {
+.activity-atlas__identity h2 {
   margin: 0;
   color: var(--text-normal);
   font-size: var(--font-ui-medium);
   letter-spacing: -0.01em;
 }
 
-.vault-pulse__identity p {
+.activity-atlas__identity p {
   margin: 2px 0 0;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
 }
 
-.vault-pulse__live-dot {
+.activity-atlas__live-dot {
   width: 9px;
   height: 9px;
   flex: 0 0 auto;
-  border: 2px solid color-mix(in srgb, var(--pulse-accent) 25%, transparent);
+  border: 2px solid color-mix(in srgb, var(--atlas-accent) 25%, transparent);
   border-radius: 999px;
-  background: var(--pulse-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pulse-accent) 10%, transparent);
+  background: var(--atlas-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--atlas-accent) 10%, transparent);
 }
 
-.vault-pulse__stats {
+.activity-atlas__stats {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 4px;
   max-width: 48%;
 }
 
-.vault-pulse__stats span,
-.vault-pulse__git,
-.vault-pulse__source {
+.activity-atlas__stats span,
+.activity-atlas__git,
+.activity-atlas__source {
   border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
   background: var(--background-secondary);
@@ -81,17 +81,17 @@
   white-space: nowrap;
 }
 
-.vault-pulse__stats .is-dirty {
-  border-color: color-mix(in srgb, var(--pulse-modify) 40%, var(--background-modifier-border));
+.activity-atlas__stats .is-dirty {
+  border-color: color-mix(in srgb, var(--atlas-modify) 40%, var(--background-modifier-border));
   color: var(--text-normal);
 }
 
-.vault-pulse__stats .is-clean {
-  border-color: color-mix(in srgb, var(--pulse-create) 35%, var(--background-modifier-border));
+.activity-atlas__stats .is-clean {
+  border-color: color-mix(in srgb, var(--atlas-create) 35%, var(--background-modifier-border));
   color: var(--text-normal);
 }
 
-.vault-pulse__controls {
+.activity-atlas__controls {
   position: sticky;
   z-index: 4;
   top: -14px;
@@ -103,28 +103,28 @@
   backdrop-filter: blur(10px);
 }
 
-.vault-pulse__controls input,
-.vault-pulse__controls select {
+.activity-atlas__controls input,
+.activity-atlas__controls select {
   min-height: 30px;
   border-color: var(--background-modifier-border);
   font-size: var(--font-ui-smaller);
 }
 
-.vault-pulse__search {
+.activity-atlas__search {
   flex: 1 1 160px;
   min-width: 120px;
 }
 
-.vault-pulse__controls select {
+.activity-atlas__controls select {
   flex: 0 1 auto;
   max-width: 135px;
 }
 
-.vault-pulse__refresh {
+.activity-atlas__refresh {
   flex: 0 0 auto;
 }
 
-.vault-pulse__date-filter {
+.activity-atlas__date-filter {
   position: relative;
   z-index: 8;
   display: flex;
@@ -133,51 +133,51 @@
   gap: 5px;
 }
 
-.vault-pulse__date-filter select {
+.activity-atlas__date-filter select {
   min-width: 0;
   max-width: none;
   flex: 1 1 auto;
 }
 
-.vault-pulse__calendar-toggle {
+.activity-atlas__calendar-toggle {
   width: 30px;
   min-width: 30px;
   height: 30px;
 }
 
-.vault-pulse__calendar {
+.activity-atlas__calendar {
   position: absolute;
   z-index: 12;
   top: calc(100% + 6px);
   right: 0;
   width: min(286px, calc(100vw - 28px));
   padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--pulse-accent) 24%, var(--background-modifier-border));
+  border: 1px solid color-mix(in srgb, var(--atlas-accent) 24%, var(--background-modifier-border));
   border-radius: 10px;
-  background: color-mix(in srgb, var(--background-secondary-alt) 96%, var(--pulse-accent) 4%);
+  background: color-mix(in srgb, var(--background-secondary-alt) 96%, var(--atlas-accent) 4%);
   max-height: min(520px, calc(100dvh - 96px));
   overflow: auto;
   box-shadow: var(--shadow-s);
 }
 
-.vault-pulse__calendar.is-hidden {
+.activity-atlas__calendar.is-hidden {
   display: none;
 }
 
-.vault-pulse__calendar-header,
-.vault-pulse__calendar-footer,
-.vault-pulse__calendar-actions {
+.activity-atlas__calendar-header,
+.activity-atlas__calendar-footer,
+.activity-atlas__calendar-actions {
   display: flex;
   align-items: center;
 }
 
-.vault-pulse__calendar-header {
+.activity-atlas__calendar-header {
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 7px;
 }
 
-.vault-pulse__calendar-header strong {
+.activity-atlas__calendar-header strong {
   overflow: hidden;
   font-size: var(--font-ui-small);
   font-weight: var(--font-semibold);
@@ -186,24 +186,24 @@
   white-space: nowrap;
 }
 
-.vault-pulse__calendar-header button {
+.activity-atlas__calendar-header button {
   width: 28px;
   min-width: 28px;
   height: 28px;
 }
 
-.vault-pulse__calendar-weekdays,
-.vault-pulse__calendar-grid {
+.activity-atlas__calendar-weekdays,
+.activity-atlas__calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 3px;
 }
 
-.vault-pulse__calendar-weekdays {
+.activity-atlas__calendar-weekdays {
   margin-bottom: 3px;
 }
 
-.vault-pulse__calendar-weekdays span {
+.activity-atlas__calendar-weekdays span {
   color: var(--text-faint);
   font-size: 9px;
   font-weight: var(--font-semibold);
@@ -211,7 +211,7 @@
   text-transform: uppercase;
 }
 
-.vault-pulse__calendar-day {
+.activity-atlas__calendar-day {
   position: relative;
   display: grid;
   min-width: 0;
@@ -228,65 +228,65 @@
   touch-action: manipulation;
 }
 
-.vault-pulse__calendar-day[aria-disabled='true'] {
+.activity-atlas__calendar-day[aria-disabled='true'] {
   cursor: default;
   color: var(--text-faint);
 }
 
-.vault-pulse__calendar-day.is-outside {
+.activity-atlas__calendar-day.is-outside {
   color: var(--text-faint);
   opacity: 0.56;
 }
 
-.vault-pulse__calendar-day.has-activity {
+.activity-atlas__calendar-day.has-activity {
   cursor: pointer;
   color: var(--text-normal);
 }
 
-.vault-pulse__calendar-day[data-level='1'] {
-  background: color-mix(in srgb, var(--pulse-accent) 8%, transparent);
+.activity-atlas__calendar-day[data-level='1'] {
+  background: color-mix(in srgb, var(--atlas-accent) 8%, transparent);
 }
 
-.vault-pulse__calendar-day[data-level='2'] {
-  background: color-mix(in srgb, var(--pulse-accent) 13%, transparent);
+.activity-atlas__calendar-day[data-level='2'] {
+  background: color-mix(in srgb, var(--atlas-accent) 13%, transparent);
 }
 
-.vault-pulse__calendar-day[data-level='3'] {
-  background: color-mix(in srgb, var(--pulse-accent) 19%, transparent);
+.activity-atlas__calendar-day[data-level='3'] {
+  background: color-mix(in srgb, var(--atlas-accent) 19%, transparent);
 }
 
-.vault-pulse__calendar-day[data-level='4'] {
-  background: color-mix(in srgb, var(--pulse-accent) 27%, transparent);
+.activity-atlas__calendar-day[data-level='4'] {
+  background: color-mix(in srgb, var(--atlas-accent) 27%, transparent);
 }
 
-.vault-pulse__calendar-day.has-activity:hover {
-  border-color: color-mix(in srgb, var(--pulse-accent) 55%, var(--background-modifier-border));
-  background: color-mix(in srgb, var(--pulse-accent) 23%, var(--background-modifier-hover));
+.activity-atlas__calendar-day.has-activity:hover {
+  border-color: color-mix(in srgb, var(--atlas-accent) 55%, var(--background-modifier-border));
+  background: color-mix(in srgb, var(--atlas-accent) 23%, var(--background-modifier-hover));
 }
 
-.vault-pulse__calendar-day.is-selected {
-  border-color: var(--pulse-accent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pulse-accent) 35%, transparent);
+.activity-atlas__calendar-day.is-selected {
+  border-color: var(--atlas-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--atlas-accent) 35%, transparent);
   color: var(--text-normal);
 }
 
-.vault-pulse__calendar-day.is-today .vault-pulse__calendar-number {
-  color: var(--pulse-accent);
+.activity-atlas__calendar-day.is-today .activity-atlas__calendar-number {
+  color: var(--atlas-accent);
   font-weight: var(--font-bold);
 }
 
-.vault-pulse__calendar-pulse {
+.activity-atlas__calendar-pulse {
   position: absolute;
   right: 5px;
   bottom: 3px;
   left: 5px;
   height: 2px;
   border-radius: 999px;
-  background: var(--pulse-accent);
+  background: var(--atlas-accent);
   opacity: 0.86;
 }
 
-.vault-pulse__calendar-day.has-commit .vault-pulse__calendar-pulse {
+.activity-atlas__calendar-day.has-commit .activity-atlas__calendar-pulse {
   right: 4px;
   bottom: 3px;
   left: auto;
@@ -296,11 +296,11 @@
   transform: rotate(45deg);
 }
 
-.vault-pulse .vault-pulse__calendar-day:focus-visible {
+.activity-atlas .activity-atlas__calendar-day:focus-visible {
   outline-offset: -2px;
 }
 
-.vault-pulse__calendar-footer {
+.activity-atlas__calendar-footer {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 7px;
@@ -311,50 +311,50 @@
   font-size: 9px;
 }
 
-.vault-pulse__calendar-actions {
+.activity-atlas__calendar-actions {
   gap: 4px;
 }
 
-.vault-pulse__calendar-actions button {
+.activity-atlas__calendar-actions button {
   min-height: 25px;
   padding: 2px 7px;
   font-size: 9px;
 }
 
-.vault-pulse__burst-actions {
+.activity-atlas__burst-actions {
   display: grid;
   flex: 1 1 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
-.vault-pulse__burst-actions button {
+.activity-atlas__burst-actions button {
   min-height: 30px;
   padding: 3px 8px;
   font-size: var(--font-ui-smaller);
 }
 
-.vault-pulse__timeline {
+.activity-atlas__timeline {
   position: relative;
   min-height: 150px;
   padding-left: 18px;
 }
 
-.vault-pulse__timeline::before {
+.activity-atlas__timeline::before {
   position: absolute;
   top: 25px;
   bottom: 0;
   left: 6px;
   width: 1px;
-  background: var(--pulse-rail);
+  background: var(--atlas-rail);
   content: '';
 }
 
-.vault-pulse__timeline.is-loading {
+.activity-atlas__timeline.is-loading {
   opacity: 0.62;
 }
 
-.vault-pulse__day {
+.activity-atlas__day {
   position: relative;
   margin: 17px 0 8px -18px;
   color: var(--text-faint);
@@ -364,8 +364,8 @@
   text-transform: uppercase;
 }
 
-.vault-pulse__burst,
-.vault-pulse__commit {
+.activity-atlas__burst,
+.activity-atlas__commit {
   position: relative;
   margin: 0 0 9px;
   border: 1px solid var(--background-modifier-border);
@@ -373,12 +373,12 @@
   background: var(--background-secondary-alt);
 }
 
-.vault-pulse__burst[open] {
-  border-color: color-mix(in srgb, var(--pulse-accent) 25%, var(--background-modifier-border));
+.activity-atlas__burst[open] {
+  border-color: color-mix(in srgb, var(--atlas-accent) 25%, var(--background-modifier-border));
   box-shadow: 0 5px 18px color-mix(in srgb, #000 7%, transparent);
 }
 
-.vault-pulse__burst > summary {
+.activity-atlas__burst > summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
@@ -387,12 +387,12 @@
   list-style: none;
 }
 
-.vault-pulse__burst > summary::-webkit-details-marker {
+.activity-atlas__burst > summary::-webkit-details-marker {
   display: none;
 }
 
-.vault-pulse__burst-title,
-.vault-pulse__commit-title {
+.activity-atlas__burst-title,
+.activity-atlas__commit-title {
   overflow: hidden;
   color: var(--text-normal);
   font-size: var(--font-ui-small);
@@ -401,14 +401,14 @@
   white-space: nowrap;
 }
 
-.vault-pulse__burst-meta,
-.vault-pulse__commit-meta {
+.activity-atlas__burst-meta,
+.activity-atlas__commit-meta {
   color: var(--text-faint);
   font-size: var(--font-ui-smaller);
   white-space: nowrap;
 }
 
-.vault-pulse__rail-dot {
+.activity-atlas__rail-dot {
   position: absolute;
   top: 14px;
   left: -16px;
@@ -416,26 +416,26 @@
   height: 7px;
   border: 2px solid var(--background-primary);
   border-radius: 999px;
-  background: var(--pulse-accent);
+  background: var(--atlas-accent);
   box-sizing: content-box;
 }
 
-.vault-pulse__changes {
+.activity-atlas__changes {
   border-top: 1px solid var(--background-modifier-border);
   padding: 3px 7px 6px;
 }
 
-.vault-pulse__change {
+.activity-atlas__change {
   gap: 8px;
   min-width: 0;
   padding: 6px 3px;
 }
 
-.vault-pulse__change + .vault-pulse__change {
+.activity-atlas__change + .activity-atlas__change {
   border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
 }
 
-.vault-pulse__op-dot {
+.activity-atlas__op-dot {
   width: 6px;
   height: 6px;
   flex: 0 0 auto;
@@ -443,17 +443,17 @@
   background: var(--text-faint);
 }
 
-.vault-pulse__change.is-create .vault-pulse__op-dot { background: var(--pulse-create); }
-.vault-pulse__change.is-modify .vault-pulse__op-dot { background: var(--pulse-modify); }
-.vault-pulse__change.is-delete .vault-pulse__op-dot { background: var(--pulse-delete); }
-.vault-pulse__change.is-rename .vault-pulse__op-dot { background: var(--pulse-rename); }
+.activity-atlas__change.is-create .activity-atlas__op-dot { background: var(--atlas-create); }
+.activity-atlas__change.is-modify .activity-atlas__op-dot { background: var(--atlas-modify); }
+.activity-atlas__change.is-delete .activity-atlas__op-dot { background: var(--atlas-delete); }
+.activity-atlas__change.is-rename .activity-atlas__op-dot { background: var(--atlas-rename); }
 
-.vault-pulse__change-main {
+.activity-atlas__change-main {
   min-width: 0;
   flex: 1 1 auto;
 }
 
-.vault-pulse__path {
+.activity-atlas__path {
   display: flex;
   width: 100%;
   min-width: 0;
@@ -470,7 +470,7 @@
   white-space: nowrap;
 }
 
-.vault-pulse__file-icon {
+.activity-atlas__file-icon {
   display: inline-flex;
   width: 13px;
   height: 13px;
@@ -480,33 +480,33 @@
   color: var(--text-muted);
 }
 
-.vault-pulse__file-icon svg {
+.activity-atlas__file-icon svg {
   width: 13px;
   height: 13px;
   stroke-width: 1.8;
 }
 
-.vault-pulse__path-text {
+.activity-atlas__path-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.vault-pulse__path:not(:disabled) {
+.activity-atlas__path:not(:disabled) {
   cursor: pointer;
 }
 
-.vault-pulse__path:not(:disabled):hover {
+.activity-atlas__path:not(:disabled):hover {
   color: var(--text-accent);
   text-decoration: underline;
 }
 
-.vault-pulse__path:disabled {
+.activity-atlas__path:disabled {
   color: var(--text-muted);
 }
 
-.vault-pulse__change-detail {
+.activity-atlas__change-detail {
   flex-wrap: wrap;
   gap: 3px 7px;
   margin-top: 2px;
@@ -514,51 +514,51 @@
   font-size: 10px;
 }
 
-.vault-pulse__diff {
+.activity-atlas__diff {
   font-family: var(--font-monospace);
 }
 
-.vault-pulse__git {
+.activity-atlas__git {
   flex: 0 0 auto;
   max-width: 112px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.vault-pulse__git.is-modified,
-.vault-pulse__git.is-staged-modified {
-  border-color: color-mix(in srgb, var(--pulse-modify) 40%, var(--background-modifier-border));
+.activity-atlas__git.is-modified,
+.activity-atlas__git.is-staged-modified {
+  border-color: color-mix(in srgb, var(--atlas-modify) 40%, var(--background-modifier-border));
   color: var(--text-normal);
 }
 
-.vault-pulse__git.is-staged {
-  border-color: color-mix(in srgb, var(--pulse-rename) 40%, var(--background-modifier-border));
+.activity-atlas__git.is-staged {
+  border-color: color-mix(in srgb, var(--atlas-rename) 40%, var(--background-modifier-border));
   color: var(--text-normal);
 }
 
-.vault-pulse__git.is-untracked {
-  border-color: color-mix(in srgb, var(--pulse-create) 40%, var(--background-modifier-border));
+.activity-atlas__git.is-untracked {
+  border-color: color-mix(in srgb, var(--atlas-create) 40%, var(--background-modifier-border));
   color: var(--text-normal);
 }
 
-.vault-pulse__git.is-deleted {
-  border-color: color-mix(in srgb, var(--pulse-delete) 40%, var(--background-modifier-border));
+.activity-atlas__git.is-deleted {
+  border-color: color-mix(in srgb, var(--atlas-delete) 40%, var(--background-modifier-border));
   color: var(--text-normal);
 }
-.vault-pulse__git.is-ignored { opacity: 0.55; }
+.activity-atlas__git.is-ignored { opacity: 0.55; }
 
-.vault-pulse__commit {
+.activity-atlas__commit {
   gap: 9px;
   padding: 9px 10px;
-  background: color-mix(in srgb, var(--pulse-accent) 6%, var(--background-secondary-alt));
+  background: color-mix(in srgb, var(--atlas-accent) 6%, var(--background-secondary-alt));
 }
 
-.vault-pulse__commit .vault-pulse__rail-dot {
+.activity-atlas__commit .activity-atlas__rail-dot {
   border-radius: 2px;
   transform: rotate(45deg);
 }
 
-.vault-pulse__empty {
+.activity-atlas__empty {
   display: grid;
   gap: 4px;
   margin: 40px 10px;
@@ -566,119 +566,119 @@
   text-align: center;
 }
 
-.vault-pulse__empty strong {
+.activity-atlas__empty strong {
   color: var(--text-normal);
 }
 
-.vault-pulse__more {
+.activity-atlas__more {
   display: block;
   width: calc(100% - 4px);
   margin: 12px 2px;
 }
 
-.vault-pulse__changes-more {
+.activity-atlas__changes-more {
   margin: 8px 2px 2px;
 }
 
-.vault-pulse :is(button, input, select, summary):focus-visible {
-  outline: 2px solid var(--pulse-accent);
+.activity-atlas :is(button, input, select, summary):focus-visible {
+  outline: 2px solid var(--atlas-accent);
   outline-offset: 2px;
 }
 
 @media (max-width: 430px) {
-  .vault-pulse__header {
+  .activity-atlas__header {
     display: block;
   }
 
-  .vault-pulse__stats {
+  .activity-atlas__stats {
     justify-content: flex-start;
     max-width: none;
     margin-top: 8px;
   }
 
-  .vault-pulse {
+  .activity-atlas {
     padding-right: 10px;
     padding-left: 10px;
   }
 
-  .vault-pulse__controls input,
-  .vault-pulse__controls select,
-  .vault-pulse__calendar-toggle,
-  .vault-pulse__refresh,
-  .vault-pulse__burst-actions button {
+  .activity-atlas__controls input,
+  .activity-atlas__controls select,
+  .activity-atlas__calendar-toggle,
+  .activity-atlas__refresh,
+  .activity-atlas__burst-actions button {
     min-height: 44px;
   }
 
-  .vault-pulse__calendar-toggle,
-  .vault-pulse__refresh {
+  .activity-atlas__calendar-toggle,
+  .activity-atlas__refresh {
     width: 44px;
     min-width: 44px;
     height: 44px;
   }
 
-  .vault-pulse__calendar {
+  .activity-atlas__calendar {
     width: min(340px, calc(100vw - 16px));
     padding: 8px;
   }
 
-  .vault-pulse__calendar-header button,
-  .vault-pulse__calendar-actions button {
+  .activity-atlas__calendar-header button,
+  .activity-atlas__calendar-actions button {
     min-width: 44px;
     min-height: 44px;
   }
 
-  .vault-pulse__calendar-day {
+  .activity-atlas__calendar-day {
     min-height: 44px;
   }
 
-  .vault-pulse__burst > summary {
+  .activity-atlas__burst > summary {
     grid-template-columns: 1fr;
     gap: 2px;
   }
 
-  .vault-pulse__git {
+  .activity-atlas__git {
     display: none;
   }
 }
 
-body.is-mobile .vault-pulse {
+body.is-mobile .activity-atlas {
   padding-right: 10px;
   padding-left: 10px;
 }
 
-body.is-mobile .vault-pulse__controls input,
-body.is-mobile .vault-pulse__controls select,
-body.is-mobile .vault-pulse__calendar-toggle,
-body.is-mobile .vault-pulse__refresh,
-body.is-mobile .vault-pulse__burst-actions button {
+body.is-mobile .activity-atlas__controls input,
+body.is-mobile .activity-atlas__controls select,
+body.is-mobile .activity-atlas__calendar-toggle,
+body.is-mobile .activity-atlas__refresh,
+body.is-mobile .activity-atlas__burst-actions button {
   min-height: 44px;
 }
 
-body.is-mobile .vault-pulse__calendar-toggle,
-body.is-mobile .vault-pulse__refresh {
+body.is-mobile .activity-atlas__calendar-toggle,
+body.is-mobile .activity-atlas__refresh {
   width: 44px;
   min-width: 44px;
   height: 44px;
 }
 
-body.is-mobile .vault-pulse__calendar {
+body.is-mobile .activity-atlas__calendar {
   width: min(340px, calc(100vw - 16px));
   padding: 8px;
 }
 
-body.is-mobile .vault-pulse__calendar-header button,
-body.is-mobile .vault-pulse__calendar-actions button {
+body.is-mobile .activity-atlas__calendar-header button,
+body.is-mobile .activity-atlas__calendar-actions button {
   min-width: 44px;
   min-height: 44px;
 }
 
-body.is-mobile .vault-pulse__calendar-day {
+body.is-mobile .activity-atlas__calendar-day {
   min-height: 44px;
 }
 
 
 @media (max-height: 500px) {
-  .vault-pulse__calendar {
+  .activity-atlas__calendar {
     position: fixed;
     top: 12px;
     right: 12px;
@@ -687,9 +687,9 @@ body.is-mobile .vault-pulse__calendar-day {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .vault-pulse__burst,
-  .vault-pulse__change,
-  .vault-pulse__live-dot {
+  .activity-atlas__burst,
+  .activity-atlas__change,
+  .activity-atlas__live-dot {
     transition: border-color 120ms ease, background-color 120ms ease, opacity 120ms ease;
   }
 }
