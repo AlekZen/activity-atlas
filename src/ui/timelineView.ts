@@ -286,7 +286,7 @@ export class ActivityAtlasTimelineView extends ItemView {
       this.timelineEl.empty();
       const state = this.timelineEl.createDiv({ cls: 'activity-atlas__empty' });
       state.createEl('strong', { text: 'Activity could not be loaded.' });
-      state.createEl('span', { text: error instanceof Error ? error.message : String(error) });
+      state.createSpan({ text: error instanceof Error ? error.message : String(error) });
     } finally {
       if (generation === this.refreshGeneration) this.timelineEl?.removeClass('is-loading');
     }
@@ -587,7 +587,7 @@ export class ActivityAtlasTimelineView extends ItemView {
     if (visible.length === 0) {
       const empty = this.timelineEl.createDiv({ cls: 'activity-atlas__empty' });
       empty.createEl('strong', { text: this.events.length ? 'No activity matches these filters.' : 'Your vault is quiet.' });
-      empty.createEl('span', { text: this.events.length ? 'Clear a filter to bring events back.' : 'Create, edit, rename, or delete a file to start the pulse.' });
+      empty.createSpan({ text: this.events.length ? 'Clear a filter to bring events back.' : 'Create, edit, rename, or delete a file to start the pulse.' });
       return;
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "activity-atlas",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Live activity timeline for Obsidian vaults with optional read-only Git status.",
   "main": "main.js",
   "scripts": {
