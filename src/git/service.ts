@@ -31,7 +31,7 @@ export class GitStatusService {
           windowsHide: true,
         },
         (error, stdout) => {
-          if (error) reject(error);
+          if (error) reject(new Error(error.message));
           else resolve(stdout);
         },
       );

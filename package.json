@@ -1,6 +1,6 @@
 {
   "name": "activity-atlas",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Live activity timeline for Obsidian vaults with optional read-only Git status.",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,7 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "esbuild": "^0.24.2",
-    "obsidian": "^1.7.2",
+    "obsidian": "^1.13.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },

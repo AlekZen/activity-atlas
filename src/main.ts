@@ -4,10 +4,9 @@ import {
   Platform,
   Plugin,
   PluginSettingTab,
-  Setting,
   TFile,
 } from 'obsidian';
-import type { DataAdapter, TAbstractFile } from 'obsidian';
+import type { DataAdapter, SettingDefinitionItem, TAbstractFile } from 'obsidian';
 import { countLines, entryContentBytes, makeBinaryEntry, makeTextEntryBudgeted, parseBaseline, serializeBaseline } from './core/baseline';
 import type { Baseline, BaselineEntry } from './core/baseline';
 import { lineStat } from './core/diff';
@@ -511,98 +510,113 @@ export default class ActivityAtlasPlugin extends Plugin implements TimelineDataS
   }
 }
 
+type ActivityAtlasSettingKey = keyof ActivityAtlasSettings;
+
 class ActivityAtlasSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: ActivityAtlasPlugin) {
     super(app, plugin);
   }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl('h2', { text: 'Activity Atlas' });
-    containerEl.createEl('p', { text: 'Activity stays local to this vault. Git integration is read-only and optional.' });
-    const settings = this.plugin.settings;
+  getSettingDefinitions(): SettingDefinitionItem<ActivityAtlasSettingKey>[] {
+    return [{
+      type: 'group',
+      heading: 'Activity Atlas',
+      items: [
+        {
+          name: 'Local activity',
+          desc: 'Activity stays local to this vault. Git integration is read-only and optional.',
+          searchable: false,
+        },
+        {
+          name: 'Burst window',
+          desc: 'Minutes of inactivity that separate one activity burst from the next.',
+          control: {
+            type: 'number',
+            key: 'burstWindowMinutes',
+            min: 1,
+            max: 30,
+            step: 1,
+          },
+        },
+        {
+          name: 'Read-only Git overlay',
+          desc: 'Shows staged, uncommitted, untracked, ignored, and committed states when desktop Git is available.',
+          control: {
+            type: 'toggle',
+            key: 'gitEnabled',
+          },
+        },
+        {
+          name: 'Git refresh interval',
+          desc: 'Seconds between read-only Git status refreshes.',
+          control: {
+            type: 'number',
+            key: 'gitRefreshSec',
+            min: 2,
+            max: 30,
+            step: 1,
+          },
+        },
+        {
+          name: 'Tracked text extensions',
+          desc: 'Comma-separated extensions that receive line-diff statistics. Other files are still tracked.',
+          control: {
+            type: 'textarea',
+            key: 'trackedExtensions',
+            rows: 3,
+          },
+        },
+        {
+          name: 'Exclude paths',
+          desc: 'One glob per line. Activity Atlas always excludes its own configuration directory.',
+          control: {
+            type: 'textarea',
+            key: 'excludeGlobs',
+            rows: 4,
+          },
+        },
+        {
+          name: 'Large text file threshold',
+          desc: 'Files above this size in KB are tracked without line statistics.',
+          control: {
+            type: 'number',
+            key: 'largeFileKb',
+            min: 1,
+            step: 1,
+          },
+        },
+        {
+          name: 'Baseline content budget',
+          desc: 'Maximum KB of text retained locally for line statistics.',
+          control: {
+            type: 'number',
+            key: 'baselineContentBudgetKb',
+            min: 1,
+            step: 1,
+          },
+        },
+        {
+          name: 'Retention',
+          desc: 'Days of activity retained locally.',
+          control: {
+            type: 'number',
+            key: 'retentionDays',
+            min: 7,
+            max: 365,
+            step: 1,
+          },
+        },
+      ],
+    }];
+  }
 
-    new Setting(containerEl)
-      .setName('Burst window')
-      .setDesc('Minutes of inactivity that separate one activity burst from the next.')
-      .addSlider(slider => slider
-        .setLimits(1, 30, 1)
-        .setValue(settings.burstWindowMinutes)
-        .setDynamicTooltip()
-        .onChange(async value => {
-          settings.burstWindowMinutes = value;
-          await this.plugin.saveSettings();
-        }));
+  getControlValue(key: string): unknown {
+    return this.plugin.settings[key as ActivityAtlasSettingKey];
+  }
 
-    new Setting(containerEl)
-      .setName('Read-only Git overlay')
-      .setDesc('Shows staged, uncommitted, untracked, ignored, and committed states when desktop Git is available.')
-      .addToggle(toggle => toggle.setValue(settings.gitEnabled).onChange(async value => {
-        settings.gitEnabled = value;
-        await this.plugin.saveSettings();
-      }));
-
-    new Setting(containerEl)
-      .setName('Git refresh interval')
-      .setDesc('Seconds between read-only Git status refreshes.')
-      .addSlider(slider => slider
-        .setLimits(2, 30, 1)
-        .setValue(settings.gitRefreshSec)
-        .setDynamicTooltip()
-        .onChange(async value => {
-          settings.gitRefreshSec = value;
-          await this.plugin.saveSettings();
-        }));
-
-    new Setting(containerEl)
-      .setName('Tracked text extensions')
-      .setDesc('Comma-separated extensions that receive line-diff statistics. Other files are still tracked.')
-      .addTextArea(text => text.setValue(settings.trackedExtensions).onChange(async value => {
-        settings.trackedExtensions = value;
-        await this.plugin.saveSettings();
-      }));
-
-    new Setting(containerEl)
-      .setName('Exclude paths')
-      .setDesc('One glob per line. Activity Atlas always excludes its own configuration directory.')
-      .addTextArea(text => text.setValue(settings.excludeGlobs).onChange(async value => {
-        settings.excludeGlobs = value;
-        await this.plugin.saveSettings();
-      }));
-
-    new Setting(containerEl)
-      .setName('Large text file threshold')
-      .setDesc('Files above this size in KB are tracked without line statistics.')
-      .addText(text => text.setValue(String(settings.largeFileKb)).onChange(async value => {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed) && parsed > 0) {
-          settings.largeFileKb = parsed;
-          await this.plugin.saveSettings();
-        }
-      }));
-
-    new Setting(containerEl)
-      .setName('Baseline content budget')
-      .setDesc('Maximum KB of text retained locally for line statistics.')
-      .addText(text => text.setValue(String(settings.baselineContentBudgetKb)).onChange(async value => {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed) && parsed > 0) {
-          settings.baselineContentBudgetKb = parsed;
-          await this.plugin.saveSettings();
-        }
-      }));
-
-    new Setting(containerEl)
-      .setName('Retention')
-      .setDesc('Days of activity retained locally.')
-      .addSlider(slider => slider
-        .setLimits(7, 365, 1)
-        .setValue(settings.retentionDays)
-        .setDynamicTooltip()
-        .onChange(async value => {
-          settings.retentionDays = value;
-          await this.plugin.saveSettings();
-        }));
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    if (!(key in DEFAULT_SETTINGS)) return;
+    (this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+    await this.plugin.saveSettings();
   }
 }

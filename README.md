@@ -33,7 +33,7 @@ Activity Atlas records file activity locally, reconciles changes made while Obsi
 
 ## Requirements
 
-- Obsidian 1.5.0 or later.
+- Obsidian 1.13.0 or later.
 - Windows, macOS, or Linux desktop.
 - Git on `PATH` only if the Git overlay is enabled.
 
