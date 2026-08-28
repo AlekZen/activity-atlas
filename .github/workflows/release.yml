@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -42,6 +44,14 @@ jobs:
           const versions=JSON.parse(fs.readFileSync('versions.json','utf8'));
           if(process.env.RELEASE_TAG!==manifest.version) throw new Error('Tag must match manifest.version');
           if(!versions[manifest.version]) throw new Error('versions.json must contain manifest.version');"
+
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
 
       - name: Create GitHub release
         env:
