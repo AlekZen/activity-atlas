@@ -1,9 +1,9 @@
 {
-  "id": "vault-change-feed",
-  "name": "Vault Change Feed",
-  "version": "1.2.0",
+  "id": "vault-pulse",
+  "name": "Vault Pulse",
+  "version": "0.1.0",
   "minAppVersion": "1.5.0",
-  "description": "Records vault changes as a machine-readable feed with per-reader cursors, so AI assistants can incrementally catch up on what you changed.",
-  "author": "tiyukains",
-  "isDesktopOnly": false
+  "description": "Visualizes live vault activity as a burst-based timeline with optional read-only Git status.",
+  "author": "Alek",
+  "isDesktopOnly": true
 }

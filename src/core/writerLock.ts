@@ -25,6 +25,10 @@ export function decideLock(
   return 'standby';
 }
 
+export function ownsLock(existing: WriterLock | null, deviceId: string): boolean {
+  return existing?.deviceId === deviceId;
+}
+
 /** 解析 lock 文件内容；坏 JSON / 缺字段 / 类型不符一律返回 null（视为无锁） */
 export function parseLock(content: string): WriterLock | null {
   try {

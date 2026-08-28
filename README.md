@@ -1,159 +1,127 @@
-# Vault Change Feed
+# Vault Pulse
 
-**Give your AI agents a changelog of your vault.** Every edit you make is recorded as a machine-readable event feed with per-reader cursors — so any AI can catch up on what changed since its last visit, instead of blindly rescanning thousands of notes.
+Visualize activity across an Obsidian vault as a compact, burst-based timeline.
 
-[![GitHub release](https://img.shields.io/github/v/release/kains2866/vault-change-feed)](https://github.com/kains2866/vault-change-feed/releases)
-[![License: MIT](https://img.shields.io/github/license/kains2866/vault-change-feed)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/kains2866/vault-change-feed/total)](https://github.com/kains2866/vault-change-feed/releases)
+[![GitHub release](https://img.shields.io/github/v/release/AlekZen/vault-pulse)](https://github.com/AlekZen/vault-pulse/releases)
+[![License: MIT](https://img.shields.io/github/license/AlekZen/vault-pulse)](LICENSE)
 
-[中文文档](https://github.com/kains2866/vault-change-feed/blob/main/README.zh-CN.md) · [Obsidian Community Listing](https://community.obsidian.md/plugins/vault-change-feed)
+Vault Pulse records file activity locally, reconciles changes made while Obsidian was closed, and groups noisy editing sessions into readable bursts. It is designed for large vaults where a flat list of recent Markdown notes is not enough.
 
-## Support / 支持
+> Vault Pulse 0.1.0 is desktop-only. Its optional Git overlay invokes the local Git executable through a Node.js API.
 
-If this plugin saves you time, you can buy me a coffee — it keeps the development going.
-如果这个插件帮你省了时间，可以请我喝杯咖啡 ☕
+## Screenshots
 
-- **International**: <a href="https://buymeacoffee.com/kains3772d"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="48"></a>
-- **中国大陆**: [爱发电](https://ifdian.net/a/kains2866)（微信 / 支付宝直达 · WeChat / Alipay）
+### Dark theme
 
----
+![Vault Pulse in Obsidian's dark theme](assets/vault-pulse-dark.png)
+
+### Light theme
+
+![Vault Pulse in Obsidian's light theme](assets/vault-pulse-light.png)
 
 ## Features
 
-- **Live change tracking** — create / modify / delete / rename events with line-level diff stats (`+added / −removed`)
-- **Offline backfill** — startup reconciliation catches edits made while Obsidian was closed (phone, iCloud sync, CLI tools); content-hash rename detection included
-- **Incremental AI reads** — each reader (AI agent) keeps its own cursor and pulls only what's new; per-file merge on read collapses edit bursts into one cumulative line
-- **Self-describing to agents** — a reading-protocol block is auto-installed into `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` on first run, so coding agents discover the feed with zero setup
-- **Rotation + stale signal** — the log is capped (90 days / 50k entries by default); readers are told explicitly when they must do a full rescan
-- **Fully local** — no network, no telemetry, works on desktop and mobile
+- Tracks file creation, modification, rename, deletion, and startup reconciliation.
+- Covers every vault file; configured text formats additionally receive line-change statistics.
+- Groups nearby events into collapsible activity bursts.
+- Filters by path, day, operation, extension, and Git state.
+- Includes a six-week activity calendar with accessible keyboard navigation.
+- Restores changes made while Obsidian was closed from a bounded local baseline.
+- Coordinates multiple Obsidian instances with a writer lock so only one instance records.
+- Optionally displays read-only Git status and the latest commit without changing the repository.
+- Uses no network services, telemetry, accounts, or advertising.
 
-## The problem
+## Requirements
 
-Your AI assistant has no idea what you edited between sessions. Scanning the whole vault every time is expensive; not scanning means it works from stale knowledge. This plugin continuously records *which file changed, how, and by how much* — the AI pulls that incrementally, on demand.
+- Obsidian 1.5.0 or later.
+- Windows, macOS, or Linux desktop.
+- Git on `PATH` only if the Git overlay is enabled.
 
 ## Installation
 
-**Community market (recommended):** Settings → Community plugins → Browse → search **Vault Change Feed** → Install → Enable. The AI protocol block installs itself on first run.
+### Community Plugins
 
-**BRAT:** add `kains2866/vault-change-feed` as a beta plugin.
+After the initial Community directory review is approved:
 
-**Manual:** copy `main.js` and `manifest.json` from the [latest release](https://github.com/kains2866/vault-change-feed/releases/latest) into `<vault>/.obsidian/plugins/vault-change-feed/`, then enable the plugin.
+1. Open **Settings → Community plugins** in Obsidian.
+2. Select **Browse** and search for **Vault Pulse**.
+3. Select **Install**, then **Enable**.
 
-## How it works
+### Manual installation
 
-- **Live**: listens to Obsidian's create / modify / delete / rename events and computes line-level diff stats
-- **On startup**: reconciles against the last baseline snapshot to backfill changes made while Obsidian was closed. A delete+create pair with identical content hash is reported as a rename (binary files re-downloaded by iCloud get a fresh mtime and may degrade to delete+create)
-- **All data stays local**, under `<configDir>/plugins/vault-change-feed/`:
-  - `changelog.jsonl` — the event stream, one JSON event per line
-  - `cursors.json` — per-reader read cursors
-  - `baseline.gz` — content baseline snapshot (for diffs and reconciliation)
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/AlekZen/vault-pulse/releases/latest).
+2. Create `<vault>/.obsidian/plugins/vault-pulse/`.
+3. Copy the three files into that folder.
+4. Reload Obsidian, then enable **Vault Pulse** under **Community plugins**.
 
-Note: the plugin has built-in **standby protection** — concurrent instances coordinate through a heartbeat writer lock (`writer.lock`); only the lock holder records, other instances stand by (read-only API still works) and automatically take over once the lock goes stale (90 s). Still, prefer running it in only **one Obsidian instance per vault at a time**.
+## Usage
 
-## Event format
+Open Vault Pulse from the ribbon activity icon or run **Vault Pulse: Open activity timeline** from the command palette.
 
-```json
-{"seq": 1284, "ts": 1785000000000, "op": "modify", "path": "ML/overfitting.md", "stat": {"added": 12, "removed": 3}, "source": "live"}
-```
+The timeline updates while Obsidian is open. At startup, Vault Pulse compares the current vault with its previous baseline and records changes made by sync tools, command-line programs, or other applications while Obsidian was closed.
 
-- `op`: `create` / `modify` / `delete` / `rename` (carries `oldPath`) / `resync` (baseline rebuilt — full rescan advised)
-- `stat`: `{added, removed}` line counts; `null` means "changed, magnitude unknown — open the file" (binaries, oversized files)
-- `source`: `live` / `reconcile` (startup backfill) / `system`
+### Calendar keyboard controls
 
-## Letting AI agents discover the feed
+When the activity calendar is open:
 
-AI agents don't know the feed exists out of the box. On first enable, the plugin **automatically** installs a reading-protocol block (wrapped in `<!-- vault-change-feed:start/end -->` markers) into the vault-root `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` — the conventional discovery points for coding agents (AGENTS.md is the cross-tool standard; CLAUDE.md for Claude Code; GEMINI.md for Gemini CLI, which doesn't read AGENTS.md by default). Zero clicks needed.
+| Key | Action |
+|---|---|
+| `ArrowLeft` / `ArrowRight` | Previous or next day |
+| `ArrowUp` / `ArrowDown` | Previous or next week |
+| `Home` / `End` | Monday or Sunday of the current week |
+| `PageUp` / `PageDown` | Previous or next month |
+| `Shift+PageUp` / `Shift+PageDown` | Previous or next year |
+| `Enter` / `Space` | Select the focused day |
+| `Escape` | Close the calendar and return focus to its button |
 
-- **Opt-out**: disable `Auto-install AI protocol on first run` to fall back to a one-time notice; the `Install AI protocol for agents` / `Remove AI protocol from agent files` commands remain available
-- **Idempotent**: re-runs update only the marked block; your own content outside the markers is preserved verbatim
-- **Refreshes with the plugin**: after updates, installed blocks are refreshed automatically — but auto-sync only touches files that already have a block, it never creates new ones (can be disabled)
-- **Clean removal**: the remove command strips the block from all three files, deleting a file only if nothing else remains
-- **Per-file toggles**: Sync AGENTS.md / Sync CLAUDE.md / Sync GEMINI.md
-- AIs without filesystem access (plain web chats) use the `Copy unread changes for AI` command instead
+## Git overlay
 
-### Optional: SessionStart hook (enforced, not "please read")
+The Git overlay is enabled by default on desktop and is strictly read-only. Vault Pulse allows only these commands:
 
-The protocol block relies on the AI choosing to read it. `extras/vault-feed-hook.mjs` goes further: hooked into an agent's SessionStart event, it injects merged unread changes into the context automatically and advances the cursor. The script walks up from the session cwd to find a tracked vault, and stays completely silent outside a vault or when nothing is unread.
+- `git status`
+- `git rev-parse`
+- `git log`
+- `git diff-tree`
 
-Kimi Code (`~/.kimi-code/config.toml`):
-
-```toml
-[[hooks]]
-event = "SessionStart"
-command = "node /path/to/extras/vault-feed-hook.mjs --reader=kimi-code --format=kimi"
-timeout = 10
-```
-
-Claude Code (`hooks.SessionStart` in `~/.claude/settings.json`):
-
-```json
-{ "type": "command", "command": "node /path/to/extras/vault-feed-hook.mjs --reader=claude-code --format=claude", "timeout": 10 }
-```
-
-`--reader` is the agent's stable cursor name. Use an absolute `node` path.
-
-## Protocol for AI agents (this README is the interface doc)
-
-This vault is tracked by the **vault-change-feed** Obsidian plugin. Before editing notes, catch up on what the user changed since your last visit:
-
-1. Read `.obsidian/plugins/vault-change-feed/cursors.json` and find your reader name (use your agent id, e.g. `"kimi-cli"`; absent means cursor `0`).
-2. Read `.obsidian/plugins/vault-change-feed/changelog.jsonl` (one JSON event per line) and take events with `seq` greater than your cursor.
-   - If your cursor is `> 0` and the smallest `seq` in the file is greater than `cursor + 1`, the log was rotated and you missed events — stop and do a full vault rescan instead.
-   - If you see an event with `op: "resync"`, the plugin rebuilt its baseline — a full rescan is advised.
-3. Event shape: `{"seq", "ts", "op": "create"|"modify"|"delete"|"rename"|"resync", "path", "oldPath"?, "stat": {"added", "removed"} | null, "source"}`. `stat: null` means "changed, magnitude unknown — open the file if you care".
-4. After processing, write the largest `seq` you saw back to `cursors.json` under your reader name. Write atomically: write `cursors.json.tmp`, then rename it to `cursors.json`.
-
-Inside Obsidian, other plugins/scripts can use the JS API instead of files:
-
-```js
-const api = app.plugins.plugins['vault-change-feed'].api;
-const { events, stale, latestSeq } = await api.getChanges('my-plugin');
-// ...handle events...
-await api.markRead('my-plugin', latestSeq);
-```
-
-The JS API's `getChanges` merges unread events per file by default (`api.getChanges(name, { merge: false })` returns the raw stream; groups that can't be merged losslessly are passed through, see below). External agents reading `changelog.jsonl` directly see the raw event stream and may implement the same merging:
-
-- Sort by `seq` first (the log may be out of order), then group by `path` (`resync` is never merged); merged events take the group's max `seq`/`ts` and the last event's `source`
-- Created and deleted within the window → group dropped; last event is `delete` and the group contains a rename → `delete` on the first rename's `oldPath` (no `oldPath` field, stat from the delete itself); last event is `delete` → `delete` (stat from the last delete)
-- Deletes and renames interleaved beyond the case above → not merged, group emitted as-is (any merge would lose some path's fate)
-- Deleted then re-created → `modify` (stat `null`); starts with create → `create`; contains a rename → `rename` (keeps the first rename's `oldPath`); otherwise → `modify`
-- For the last three, `stat` is the per-line sum if all entries are non-null, else `null`; output sorted by merged seq
-
-## Commands
-
-- `Copy unread changes for AI` — copies a compact summary of unread changes (reader `manual`) to the clipboard, ready to paste into any AI chat
-- `Install AI protocol for agents` / `Remove AI protocol from agent files` — manage the discovery blocks in `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
+It sets `GIT_OPTIONAL_LOCKS=0`, applies time and output limits, and never stages, commits, resets, checks out, or writes repository data. Disable the overlay in Vault Pulse settings if it is not needed.
 
 ## Settings
 
 | Setting | Default | Description |
-|---|---|---|
-| Tracked text extensions | `md, markdown, txt, canvas, json, csv` | These extensions get diff stats |
-| Exclude globs | empty | Extra exclusion rules; the vault config folder is always excluded |
-| Large file threshold | 1024 KB | Larger files get `stat: null` |
-| Baseline content budget | 102400 KB (100 MB) | Text kept in memory for diffing; beyond the budget, files store hash only (`stat` falls back to `null`) |
-| Retention days / max entries | 90 / 50000 | Log rotation, whichever limit hits first |
-| Baseline flush interval | 300 s | Baseline persistence period |
-| Auto-install AI protocol on first run | on | Install the protocol block on first enable |
-| Sync AGENTS.md / CLAUDE.md / GEMINI.md | on | Per-file install targets |
-| Auto-sync protocol block | on | Refresh installed blocks after plugin updates |
+|---|---:|---|
+| Tracked text extensions | Common note, data, code, and web formats | Formats that receive line-change statistics |
+| Exclude globs | Empty | Additional paths to ignore; the vault configuration folder is always excluded |
+| Large file threshold | 512 KB | Larger text files are tracked without line statistics |
+| Baseline content budget | 20 MB | Maximum retained text used for reconciliation and diffs |
+| Retention | 90 days / 50,000 events | Bounds the local activity log |
+| Baseline flush interval | 300 seconds | Frequency of durable baseline snapshots |
+| Burst window | 10 minutes | Maximum gap between events in one burst |
+| Git overlay | Enabled | Shows read-only repository status |
+| Git refresh interval | 5 seconds | Frequency of Git status refreshes |
 
-## Privacy
+## Local data and privacy
 
-Fully local: no network calls, no uploads, no data collection. Everything lives in your own vault.
+Vault Pulse does not make network requests and does not collect telemetry. Runtime data stays under the plugin directory inside the vault configuration folder:
+
+- `activity.jsonl` — bounded activity log.
+- `baseline.gz` — compressed reconciliation baseline.
+- `writer.lock` — multi-instance writer coordination.
+- `data.json` — Obsidian-managed plugin settings and local state.
+
+The optional Git overlay starts the local `git` executable and reads repository metadata. It does not send that information anywhere.
 
 ## Development
 
 ```bash
-npm install
-npm run build   # typecheck + bundle main.js
-npm test        # vitest
+npm ci
+npm test
+npm run build
 ```
 
-Works on desktop and mobile (all file operations go through the Obsidian vault API).
+The production build writes `main.js` at the repository root. A release must attach `main.js`, `manifest.json`, and `styles.css`, and its tag must match `manifest.json`.
 
+## Origin and license
 
-## License
+Vault Pulse began as a derivative of [Vault Change Feed](https://github.com/kains2866/vault-change-feed) by tiyukains. The product, interface, and storage contract have since diverged substantially. The original author and copyright remain credited in [LICENSE](LICENSE).
 
-[MIT](LICENSE) © tiyukains
+Vault Pulse is distributed under the MIT License.

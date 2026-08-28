@@ -1,6 +1,8 @@
 node_modules/
 main.js
 *.js.map
+*.tsbuildinfo
 .DS_Store
+.obsidian/
 
 .superpowers/

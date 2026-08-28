@@ -38,7 +38,7 @@ export function makeBinaryEntry(size: number, mtime: number): BaselineEntry {
 }
 
 export function serializeBaseline(baseline: Baseline): Uint8Array {
-  return gzipSync(strToU8(JSON.stringify(Object.fromEntries(baseline))));
+  return gzipSync(strToU8(JSON.stringify(Object.fromEntries(baseline))), { level: 1, mtime: 0 });
 }
 
 /** 损坏数据抛异常，由调用方走 resync 流程 */

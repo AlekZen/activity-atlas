@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with bounded parallelism
+        run: npm test -- --maxWorkers=1 --minWorkers=1 --no-file-parallelism
+
+      - name: Typecheck and build
+        run: npm run build
+
+      - name: Verify release metadata
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          node -e "const fs=require('fs');
+          const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
+          const versions=JSON.parse(fs.readFileSync('versions.json','utf8'));
+          if(process.env.RELEASE_TAG!==manifest.version) throw new Error('Tag must match manifest.version');
+          if(!versions[manifest.version]) throw new Error('versions.json must contain manifest.version');"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          main.js manifest.json styles.css
+          --verify-tag
+          --generate-notes
+          --title "Vault Pulse $GITHUB_REF_NAME"

@@ -1,10 +1,11 @@
-import { ChangeEvent, ChangeOp, EventSource, LineStat } from './types';
+import { ChangeEvent, ChangeOp, EventSource, GitCommitInfo, LineStat } from './types';
 
 export interface PushOptions {
   oldPath?: string;
   stat?: LineStat | null;
   source?: EventSource;
   ts?: number;
+  commit?: GitCommitInfo;
 }
 
 /** 事件队列：分配 seq、缓冲待写事件 */
@@ -25,6 +26,7 @@ export class EventFeed {
       stat: opts.stat ?? null,
       source: opts.source ?? 'live',
       ...(opts.oldPath !== undefined ? { oldPath: opts.oldPath } : {}),
+      ...(opts.commit !== undefined ? { commit: opts.commit } : {}),
     };
     this.queue.push(e);
     return e;

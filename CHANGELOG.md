@@ -1,57 +1,26 @@
 # Changelog
 
-本项目的所有重要变更都会记录在此文件中。
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
+All notable changes to Vault Pulse are documented in this file.
 
-## [1.2.0] - 2026-07-27
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/).
 
-### 新增
+## [0.1.0] - 2026-08-28
 
-- 界面文案 i18n（跟随 Obsidian 语言，中/英）
-- 多实例待机保护（心跳写者锁）：后启动的实例进入待机，不写文件、不注册监听；写者锁 90 秒过期后待机实例自动接管
-- 云同步检测提示（Obsidian Sync / iCloud / Dropbox / OneDrive / Google Drive / Syncthing / git），只提示一次
-- 基线内容预算设置（默认 100MB）：超预算的文本文件只存哈希，增删行数退化为 null，变更检测不受影响
+### Added
 
-### 修复
+- Live tracking for create, modify, rename, and delete operations across the vault.
+- Startup reconciliation for changes made while Obsidian was closed.
+- Burst-based activity timeline with path, day, operation, extension, and Git-state filters.
+- Six-week activity calendar with complete keyboard navigation and focus restoration.
+- Optional read-only Git status and latest-commit overlay for desktop Obsidian.
+- Bounded compressed baseline and activity-log retention.
+- Multi-instance writer-lock coordination and stale-lock takeover.
+- Light-theme, dark-theme, narrow-pane, and Obsidian mobile-emulation layouts.
+- Local-only operation with no network requests or telemetry.
 
-- locale 探测增加 `navigator.language` 兜底（`moment.locale` 为非官方 API）
+### Changed
 
-## [1.1.1] - 2026-07-27
+- Reworked the upstream Vault Change Feed foundation into the Vault Pulse product and storage contract.
+- Declared the initial Community release desktop-only because the Git overlay uses Node.js process APIs.
 
-### 修复
-
-- 协议块中的数据文件路径改用 `vault.configDir` 渲染，兼容自定义配置目录的 vault（不再硬编码 `.obsidian`）
-
-## [1.1.0] - 2026-07-27
-
-### 新增
-
-- 移动端支持：文件操作从 Node `fs` 迁移到 `vault.adapter`（官方 API），`isDesktopOnly` 移除
-
-### 修复
-
-- 消除社区目录「Direct Filesystem Access」警告：插件不再直接访问文件系统
-
-## [1.0.1] - 2026-07-27
-
-### 修复
-
-- 社区目录自动审查反馈：`builtin-modules` 换为 Node 内置 `node:module`（减一个依赖）；`cursors.ts` JSON 解析类型收窄；`onunload` 返回值类型对齐 Plugin 接口；设置文案移除 `.obsidian` 字面量（逻辑本就用 `vault.configDir`）
-
-## [1.0.0] - 2026-07-27
-
-首个公开发布版本。
-
-### 新增
-
-- 运行期监听 vault 增/删/改/重命名事件，行级 diff 统计增删行数
-- 启动时基线对账，补记 Obsidian 关闭期间的变更（含 iCloud/手机端/CLI 来源）；同哈希删建自动识别为 rename
-- 机器可读事件流 `changelog.jsonl` + 按读者游标 `cursors.json` + 基线快照 `baseline.gz`
-- 读取协议：`getChanges` / `markRead` JS API；外部 agent 可直接读写文件（README 含协议说明）
-- 读取侧按文件合并未读事件（`getChanges` 默认开启，`merge: false` 关闭）；不可无损合并的组原样透传
-- 日志轮转（90 天 / 5 万条可配）与 stale 信号（游标出现空洞时提示全量重扫）
-- 基线损坏自动重建并记录 resync 事件；`.obsidian/` 恒排除防自激
-- 开箱即用的 AI 发现机制：首跑自动把读取协议块写入 AGENTS.md / CLAUDE.md / GEMINI.md（标记块、幂等、随版本自动刷新、可关闭），附 install/remove 命令
-- 命令 `Copy unread changes for AI`：未读变更摘要复制到剪贴板
-- `extras/vault-feed-hook.mjs`：可选的 agent SessionStart hook 脚本，会话启动自动注入未读变更并推进游标（Kimi Code / Claude Code）
-- 设置页：跟踪扩展名、排除 glob、大文件阈值、保留策略、基线持久化周期、协议块安装/同步开关
+[0.1.0]: https://github.com/AlekZen/vault-pulse/releases/tag/0.1.0

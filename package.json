@@ -1,7 +1,7 @@
 {
-  "name": "vault-change-feed",
-  "version": "1.2.0",
-  "description": "Machine-readable vault change feed with per-reader cursors, built for AI assistants managing your Obsidian vault.",
+  "name": "vault-pulse",
+  "version": "0.1.0",
+  "description": "Live activity timeline for Obsidian vaults with optional read-only Git status.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -11,10 +11,11 @@
   "keywords": [
     "obsidian",
     "obsidian-plugin",
-    "ai",
-    "changelog"
+    "activity",
+    "timeline",
+    "git"
   ],
-  "author": "tiyukains",
+  "author": "Alek",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.2",

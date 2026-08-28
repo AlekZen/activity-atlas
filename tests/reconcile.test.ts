@@ -83,4 +83,47 @@ describe('reconcile', () => {
       [44, 'delete'],   // ts 9000 (scanTs)
     ]);
   });
+
+  it('single scan mixing rename-by-hash, modify on another path, create and delete: correct ops, oldPath, stats, order/seq, baseline', () => {
+    const old: Baseline = new Map([
+      ['ren/old.md', makeTextEntry('SAME PAYLOAD')],
+      ['mod/b.md', makeTextEntry('a\nb\nc')],
+      ['del/c.md', makeTextEntry('gone1\ngone2')],
+    ]);
+    const current = [
+      textSnap('ren/new.md', 'SAME PAYLOAD', 2000),
+      textSnap('mod/b.md', 'a\nX\nc\nd', 3000),
+      textSnap('new/d.md', 'brand new content', 1000),
+    ];
+    const { events, baseline } = reconcile(old, current, 500, 9999);
+
+    expect(events.map(e => [e.seq, e.op, e.path, e.ts])).toEqual([
+      [500, 'create', 'new/d.md', 1000],
+      [501, 'rename', 'ren/new.md', 2000],
+      [502, 'modify', 'mod/b.md', 3000],
+      [503, 'delete', 'del/c.md', 9999],
+    ]);
+
+    const [createEv, renameEv, modifyEv, deleteEv] = events;
+
+    expect(createEv).toMatchObject({ stat: { added: 1, removed: 0 }, source: 'reconcile' });
+    expect(createEv.oldPath).toBeUndefined();
+
+    expect(renameEv).toMatchObject({ oldPath: 'ren/old.md', stat: { added: 0, removed: 0 } });
+
+    expect(modifyEv).toMatchObject({ stat: { added: 2, removed: 1 } });
+    // Same-path change with a different hash must stay 'modify' and never carry oldPath,
+    // i.e. it must not get confused with / paired into a rename.
+    expect(modifyEv.oldPath).toBeUndefined();
+
+    expect(deleteEv).toMatchObject({ stat: { added: 0, removed: 2 } });
+    expect(deleteEv.oldPath).toBeUndefined();
+
+    expect([...baseline.keys()].sort()).toEqual(['mod/b.md', 'new/d.md', 'ren/new.md']);
+    expect(baseline.get('ren/new.md')).toEqual({ hash: hashContent('SAME PAYLOAD'), content: 'SAME PAYLOAD' });
+    expect(baseline.get('mod/b.md')).toEqual({ hash: hashContent('a\nX\nc\nd'), content: 'a\nX\nc\nd' });
+    expect(baseline.get('new/d.md')).toEqual({ hash: hashContent('brand new content'), content: 'brand new content' });
+    expect(baseline.has('ren/old.md')).toBe(false);
+    expect(baseline.has('del/c.md')).toBe(false);
+  });
 });
