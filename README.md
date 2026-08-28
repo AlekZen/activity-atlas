@@ -125,3 +125,5 @@ Activity Atlas began as a derivative of [Vault Change Feed](https://github.com/k
 The combined work is distributed under the [MIT License](LICENSE). MIT permits use, modification, redistribution, sublicensing, and sale, provided both copyright notices and the MIT permission notice remain with copies or substantial portions of the software.
 
 This license grant is separate from [Obsidian's Community plugin policy for derivatives](https://docs.obsidian.md/Developer+policies), which governs eligibility for the official directory.
+
+The current review state, evidence dates, reminder setup, and fallback procedure are recorded in the [Community directory publication runbook](docs/community-directory-publication.md).
