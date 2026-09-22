@@ -122,9 +122,9 @@ export class ActivityAtlasTimelineView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
-    this.containerEl.empty();
-    this.containerEl.addClass('activity-atlas-view');
-    const root = this.containerEl.createDiv({ cls: 'activity-atlas' });
+    this.contentEl.empty();
+    this.contentEl.addClass('activity-atlas-view');
+    const root = this.contentEl.createDiv({ cls: 'activity-atlas' });
     this.renderHeader(root);
     this.renderControls(root);
     this.timelineEl = root.createDiv({ cls: 'activity-atlas__timeline', attr: { 'aria-live': 'polite' } });

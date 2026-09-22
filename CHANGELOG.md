@@ -4,6 +4,13 @@ All notable changes to Activity Atlas are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-09-22
+
+### Fixed
+
+- Preserve view container structure by rendering inside `this.contentEl` instead of wiping `this.containerEl`. This prevents destroying the tab header and layout controls when opening the timeline view.
+
+
 ## [0.1.3] - 2026-08-28
 
 ### Removed
